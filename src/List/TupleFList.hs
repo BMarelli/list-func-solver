@@ -20,6 +20,7 @@ instance FList TList where
   zero L (TList (xs, ys)) = TList (Num 0:xs, ys)
   zero R (TList (xs, ys)) = TList (xs, Num 0:ys)
 
+  succesor L (TList ([], [Num x])) = TList ([], [Num (succ x)])
   succesor L (TList ((Num x):xs, ys)) = TList (Num (succ x):xs, ys)
   succesor R (TList (xs, (Num y):ys)) = TList (xs, Num (succ y):ys)
   succesor _ l = l 

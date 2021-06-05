@@ -6,9 +6,9 @@ data Comms = Def String [Funcs]
            | Eval Exp
            deriving (Show, Eq)
 
-data Exp = List (ListElements, Int, Type)
-         | Var (String, Int, Type)
-         | Term [Funcs] Exp
+data Exp = List (ListElements, Type)
+         | Var (String, Type)
+         | Term [Funcs] Exp Int
          deriving (Show, Eq)
 
 data Elements = Num Int | Generic deriving Eq

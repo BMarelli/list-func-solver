@@ -11,7 +11,7 @@ import PPrinter ( pp, ppc, ppEnv )
 import AST
 import Monads
 import List.FList
-import ListEval
+import ListEval ( eval, infer )
 
 type File = Either FilePath ()
 
@@ -97,9 +97,14 @@ repl f v = do input <- getInputLine"FL> "
                                 None -> repl f v
                                 Print -> printAST c >> repl f v
                                 Reload -> repl emptyEnvFuncs emptyEnvVars 
+                                -- Solve cs -> let exp = parser cs
+                                --                 (res, f', v') = eval exp f v
+                                --             in outputStrLn (pp res) >> repl f' v'
                                 Solve cs -> let exp = parser cs
-                                                (res, f', v') = eval exp f v
-                                            in outputStrLn (pp res) >> repl f' v'
+                                            in case infer exp f v of
+                                                (Left err, _, _) -> outputStrLn (pp (Left err)) >> repl f v
+                                                otherwise -> let (res, f', v') = eval exp f v
+                                                             in outputStrLn (pp res) >> repl f' v'
                                 Display -> outputStrLn (ppEnv f v) >> repl f v
                                 Cmds -> outputStrLn printCommands >> repl f v
                                 Help -> outputStrLn printHelp >> repl f v

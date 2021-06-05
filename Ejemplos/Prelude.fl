@@ -25,4 +25,4 @@ def pred_left_p = zero_right zero_right succ_right
                   { succ_right move_left succ_right move_right }
                   delete_right move_left;
 
-const empty = [] <TList> :: 0;
+const empty = [] <TList>;

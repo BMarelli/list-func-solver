@@ -46,14 +46,14 @@ comms       : DEF VAR '=' funcSeq ';'          { Def $2 $4 }
             | exp ';'                          { Eval $1 }
 
 exp         :: { Exp }
-exp         : funcSeq ':' atoms                { Term $1 $3 }
+exp         : funcSeq ':' atoms ':'':' NUM     { Term $1 $3 $6 }
             | atoms                            { $1 }
 
 atoms       :: { Exp }
-atoms       : '[' lista ']' ':'':' NUM               { List ($2, $6, DEFAULT) }
-            | VAR ':'':' NUM                         { Var ($1, $4, DEFAULT) }
-            | '[' lista ']' '<' TYPE '>' ':'':' NUM  { List ($2, $9, $5) }
-            | VAR '<' TYPE '>' ':'':' NUM            { Var ($1, $7, $3) }
+atoms       : '[' lista ']'                    { List ($2, DEFAULT) }
+            | VAR                              { Var ($1, DEFAULT) }
+            | '[' lista ']' '<' TYPE '>'       { List ($2, $5) }
+            | VAR '<' TYPE '>'                 { Var ($1, $3) }
 
 funcSeq     :: { [Funcs] }
 funcSeq     : func                             { [$1] }

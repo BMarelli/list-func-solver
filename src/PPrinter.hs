@@ -42,7 +42,7 @@ ppVars [] = ["empty"]
 ppVars exps = map ppVars' exps
 
 ppVars' :: (String, Exp) -> String
-ppVars' (ss, List (xs, i, t)) = "const " ++ ss ++ " = " ++ show xs ++ " <" ++ show t ++ ">;"
-ppVars' (ss, Var (var, i, t)) = "const " ++ ss ++ " = " ++ var ++ " <" ++ show t ++ ">;"
-ppVars' (ss, Term fs (List (xs, i, t))) = "const " ++ ss ++ " = " ++ unwords (map func2string fs) ++ " : " ++ show xs ++ " <" ++ show t ++ ">;"
-ppVars' (ss, Term fs (Var (var, i, t))) = "const " ++ ss ++ " = " ++ unwords (map func2string fs) ++ " : " ++ var ++ " <" ++ show t ++ ">;"
+ppVars' (ss, List (xs, t)) = "const " ++ ss ++ " = " ++ show xs ++ " <" ++ show t ++ ">;"
+ppVars' (ss, Var (var, t)) = "const " ++ ss ++ " = " ++ var ++ " <" ++ show t ++ ">;"
+ppVars' (ss, Term fs (List (xs, t)) i) = "const " ++ ss ++ " = " ++ unwords (map func2string fs) ++ " : " ++ show xs ++ " <" ++ show t ++ ">;"
+ppVars' (ss, Term fs (Var (var, t)) i) = "const " ++ ss ++ " = " ++ unwords (map func2string fs) ++ " : " ++ var ++ " <" ++ show t ++ ">;"

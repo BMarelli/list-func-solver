@@ -34,24 +34,24 @@ aplicar f xs T2 = do l <- aplicar' @[] f xs
                      return (quote l, T2)
 
 changeType :: Exp -> Type -> Exp
-changeType (List (xs, i, _)) t = List (xs, i, t)
-changeType (Var (var, i, _)) t = Var (var, i, t)
-changeType (Term fns exp) t = Term fns (changeType exp t)
+changeType (List (xs, _)) t = List (xs, t)
+changeType (Var (var, _)) t = Var (var, t)
+changeType (Term fns exp i) t = Term fns (changeType exp t) i
 
 evalExp :: (MonadState m, MonadError m) => Exp -> m TypedList
-evalExp (List (xs, i, t)) = case t of
+evalExp (List (xs, t)) = case t of
                               INVALID -> throw InvalidType
                               _ -> return $ Just (xs, t)
-evalExp (Var (var, i, t)) = case t of
+evalExp (Var (var, t)) = case t of
                               INVALID -> throw InvalidType
                               _ -> do exp <- look4var var
                                       evalExp (changeType exp t)
-evalExp (Term [f] exp) = do l <- evalExp exp
-                            l' <- uncurry (aplicar f) (fromJust l)
-                            return $ Just l'
-evalExp (Term (f:fs) exp) = do l <- evalExp exp
-                               (l', t) <- uncurry (aplicar f) (fromJust l)
-                               evalExp (Term fs (List (l', length l' , t)))
+evalExp (Term [f] exp i) = do l <- evalExp exp
+                              l' <- uncurry (aplicar f) (fromJust l)
+                              return $ Just l'
+evalExp (Term (f:fs) exp i) = do l <- evalExp exp
+                                 (l', t) <- uncurry (aplicar f) (fromJust l)
+                                 evalExp (Term fs (List (l', t)) i)
 -- evalExp (List (Just xs, _)) = return (Just xs)
 -- evalExp (Var (ss, _)) = do exp <- look4var ss
 --                            evalExp exp
@@ -92,7 +92,7 @@ evalComms (Def ss fs) = do fns <- evalFunc fs
                            updateFunc ss fns
                            return Nothing
 evalComms (Const ss exp) = do l <- evalExp exp
-                              updateVar ss (List (fst (fromJust l), length $ fst (fromJust l), snd (fromJust l)))
+                              updateVar ss (List (fromJust l))
                               return Nothing
 
 
@@ -109,18 +109,37 @@ eval (x:xs) f v = case eval' x f v of
   -- let (Right (_, f', v')) = eval' x f v
   --                 in eval xs f' v'
 
--- infer :: (MonadState m, MonadError m) => Exp -> m Int
--- infer (List (l, n, _)) = if length l == n then return n else throw InvalidInfer
--- infer (Var (ss, n, _)) = do exp <- look4var ss
---                             i <- infer exp
---                             if i == n then return n
---                             else throw InvalidInfer
--- infer (Term fns exp) = do n <- infer exp
+infer :: [Comms] -> EnvFuncs -> EnvVars -> (Either Error Int, EnvFuncs, EnvVars)
+infer [x] f v = case infer' x f v of
+                  Left err -> (Left err, f, v)
+                  Right (res, f', v') -> (Right res, f', v')
+infer (x:xs) f v = case infer' x f v of
+                      Right (_, f', v') -> infer xs f' v'
+                      Left err -> (Left err, f, v)
 
+infer' :: Comms -> EnvFuncs -> EnvVars -> Either Error (Int, EnvFuncs, EnvVars)
+infer' (Eval exp) f v = runStateError (inferExp exp) f v
+infer' (Def _ _) f v = Right (-1, f, v)
+infer' (Const _ _) f v = Right (-1, f, v)
 
--- infer :: (MonadState m, MonadError m) => (Exp, Int) -> m Int
--- infer (List l, n) = return n
--- infer (Var ss, n) = do (l, i) <- look4var ss
---                        if n == i then return n
---                        else throw InvalidInfer
--- infer (Term fns exp, n) = undefined
+inferExp :: (MonadState m, MonadError m) => Exp -> m Int
+inferExp (List (l,_)) = return $ length l
+inferExp (Var (ss, _)) = do exp <- look4var ss
+                            inferExp exp
+inferExp (Term [] exp n) = do i <- inferExp exp
+                              if i == n then return n
+                              else throw InvalidInfer
+inferExp (Term ((Zero _):fs) exp n) = inferExp (Term fs exp (n-1)) >> return n
+inferExp (Term ((Succ _):fs) exp n) = inferExp (Term fs exp n) >> return n
+inferExp (Term ((Delete _):fs) exp n) = inferExp (Term fs exp (n+1)) >> return n
+inferExp (Term ((Rep fns):fs) exp n) = return n 
+inferExp (Term ((Defined ss):fs) exp n) = do f <- look4func ss
+                                             inferExp (Term (f++fs) exp n)
+
+-- infer (Term ((Zero _):fs) exp n) = do i <- infer exp
+--                                       i' <- infer (Term fs Exp Int)
+--                                       if i + 1 == n then return n
+--                                       else throw InvalidInfer
+-- infer (Term ((Delete _):fs) exp n) = do i <- infer exp
+--                                         if i - 1 == n then return n
+--                                         else throw InvalidInfer
