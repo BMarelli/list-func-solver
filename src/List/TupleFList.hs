@@ -7,6 +7,9 @@ import AST
 
 newtype TList a = TList ([a], [a]) deriving Show
 
+fromRight :: Either a b -> b
+fromRight (Right x) = x
+
 instance FList TList where
   lengthFL (TList (xs, ys)) = length xs + length ys
 
@@ -20,10 +23,10 @@ instance FList TList where
   zero L (TList (xs, ys)) = TList (Num 0:xs, ys)
   zero R (TList (xs, ys)) = TList (xs, Num 0:ys)
 
-  succesor L (TList ([], [Num x])) = TList ([], [Num (succ x)])
-  succesor L (TList ((Num x):xs, ys)) = TList (Num (succ x):xs, ys)
-  succesor R (TList (xs, (Num y):ys)) = TList (xs, Num (succ y):ys)
-  succesor _ l = l 
+  succesor _ (TList ([], [])) = Left InvalidAplication
+  succesor L (TList ([], [Num x])) = Right $ TList ([], [Num (succ x)])
+  succesor L (TList ((Num x):xs, ys)) = Right $ TList (Num (succ x):xs, ys)
+  succesor R (TList (xs, (Num y):ys)) = Right $ TList (xs, Num (succ y):ys)
 
   -- delete L (TList ((Num _):xs, ys)) = TList (xs, ys)
   -- delete L (TList ([], ys)) = delete R (TList (reverse ys, []))
@@ -31,31 +34,32 @@ instance FList TList where
   -- delete R (TList (xs, (Num _):ys)) = TList (xs, ys)
   -- delete _ (TList (xs, ys)) = TList (xs, ys)
 
-  delete L (TList ((Num _):xs, ys)) = TList (xs, ys)
-  delete R (TList ([Num _], [])) = TList ([], [])
-  delete _ (TList ([], [])) = TList ([], [])
+  delete _ (TList ([], [])) = Left InvalidAplication
+  delete L (TList ((Num _):xs, ys)) = Right $ TList (xs, ys)
+  delete R (TList ([Num _], [])) = Right $ TList ([], [])
   delete L (TList ([], ys)) = delete L (TList (reverse ys, []))
-  delete R (TList (xs, (Num _):ys)) = TList (xs, ys)
-  delete _ l@(TList (xs, ys)) = l
+  delete R (TList (xs, (Num _):ys)) = Right $ TList (xs, ys)
+  delete _ l@(TList (xs, ys)) = Right l
 
-  rep fn l = rep_ (fn, []) l
+  rep fn l | lengthFL l >= 2 = rep_ (fn, []) l
+           | otherwise     = Left InvalidAplication
     where
-      rep_ :: ([Funcs], [Funcs]) -> TList Elements -> TList Elements
-      rep_ _ l@(TList ([], [])) = l
-      rep_ ([], rst) l@(TList ((Num x):xs, (Num y):ys)) | x == y    = l
+      rep_ :: ([Funcs], [Funcs]) -> TList Elements -> Either Error (TList Elements)
+      rep_ _ l@(TList ([], [])) = Left InvalidAplication
+      rep_ ([], rst) l@(TList ((Num x):xs, (Num y):ys)) | x == y    = Right l
                                                         | otherwise = rep_ (reverse rst, []) l
       rep_ ([], rst) l@(TList (xs, ys)) = rep_ (reverse rst, []) l
-      rep_ (f:fs, []) l@(TList ((Num x):xs, (Num y):ys)) | x == y    = l
+      rep_ (f:fs, []) l@(TList ((Num x):xs, (Num y):ys)) | x == y    = Right l
                                                          | otherwise = case f of
                                                                           Zero or -> rep_ (fs, [f]) (zero or l)
-                                                                          Succ or -> rep_ (fs, [f]) (succesor or l)
-                                                                          Delete or -> rep_ (fs, [f]) (delete or l)
-                                                                          Rep fns -> rep_ (fs, [f]) (rep fns l)
+                                                                          Succ or -> rep_ (fs, [f]) (fromRight (succesor or l))
+                                                                          Delete or -> rep_ (fs, [f]) (fromRight (delete or l))
+                                                                          Rep fns -> rep_ (fs, [f]) (fromRight (rep fns l))
       rep_ (f:fs, rst) l@(TList (xs, ys)) = case f of
                                               Zero or -> rep_ (fs, f:rst) (zero or l)
-                                              Succ or -> rep_ (fs, f:rst) (succesor or l)
-                                              Delete or -> rep_ (fs, f:rst) (delete or l)
-                                              Rep fns -> rep_ (fs, f:rst) (rep fns l)                                        
+                                              Succ or -> rep_ (fs, f:rst) (fromRight (succesor or l))
+                                              Delete or -> rep_ (fs, f:rst) (fromRight (delete or l))
+                                              Rep fns -> rep_ (fs, f:rst) (fromRight (rep fns l))
 
 -- instance Show a => Show (TList a) where
 --   show (TList (xs, ys)) = "[" ++ show_ (length xs) (length ys) xs (reverse ys) 0

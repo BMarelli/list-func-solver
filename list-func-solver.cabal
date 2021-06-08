@@ -39,7 +39,8 @@ library
   hs-source-dirs:
       src
   build-depends:
-      array
+      ansi-terminal
+    , array
     , base >=4.7 && <5
     , containers
     , haskeline
@@ -53,7 +54,8 @@ executable list-func-solver-exe
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      array
+      ansi-terminal
+    , array
     , base >=4.7 && <5
     , containers
     , haskeline
@@ -69,7 +71,8 @@ test-suite list-func-solver-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      array
+      ansi-terminal
+    , array
     , base >=4.7 && <5
     , containers
     , haskeline

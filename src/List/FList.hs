@@ -7,7 +7,7 @@ class FList l where
   quote :: l Elements -> ListElements
 
   zero :: Orientation -> l Elements -> l Elements
-  succesor :: Orientation -> l Elements -> l Elements
-  delete :: Orientation -> l Elements -> l Elements
-  rep :: [Funcs] -> l Elements -> l Elements
+  succesor :: Orientation -> l Elements -> Either Error (l Elements)
+  delete :: Orientation -> l Elements -> Either Error (l Elements)
+  rep :: [Funcs] -> l Elements -> Either Error (l Elements)
 

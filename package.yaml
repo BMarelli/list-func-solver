@@ -24,6 +24,7 @@ dependencies:
 - containers
 - haskeline
 - array
+- ansi-terminal
 
 library:
   source-dirs: src

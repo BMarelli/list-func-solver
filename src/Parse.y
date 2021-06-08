@@ -15,13 +15,13 @@ import Data.Map.Strict as M hiding (map)
   ','           { TComma }
   ';'           { TSemiColon }
   ':'           { TDDot }
+  '::'          { T2DDot }
   '['           { TOpen }
   ']'           { TClose }
   '{'           { TROpen }
   '}'           { TRClose }
   '<'           { TTypeOpen }
   '>'           { TTypeClose }
-  '#'           { TSharp }
   NUM           { TNum $$ }
   GENERIC       { TGeneric }
   ZERO_LEFT     { TZeroLeft }
@@ -43,10 +43,11 @@ commsSeq    : comms                            { [$1] }
 comms       :: { Comms }
 comms       : DEF VAR '=' funcSeq ';'          { Def $2 $4 }
             | CONST VAR '=' exp ';'            { Const $2 $4 }
+            | exp '::' NUM ';'                 { Infer $1 $3 }
             | exp ';'                          { Eval $1 }
 
 exp         :: { Exp }
-exp         : funcSeq ':' atoms ':'':' NUM     { Term $1 $3 $6 }
+exp         : funcSeq ':' atoms                { Term $1 $3 }
             | atoms                            { $1 }
 
 atoms       :: { Exp }
@@ -86,13 +87,13 @@ data Token = TEquals
            | TComma
            | TSemiColon
            | TDDot
+           | T2DDot
            | TOpen
            | TClose
            | TROpen
            | TRClose
            | TTypeOpen
            | TTypeClose
-           | TSharp
            | TNum Int
            | TGeneric
            | TCons
@@ -124,13 +125,13 @@ lexer ('=':cs) = TEquals : lexer cs
 lexer ('.':cs) = TDot : lexer cs
 lexer (',':cs) = TComma : lexer cs
 lexer (';':cs) = TSemiColon : lexer cs
+lexer (':':':':cs) = T2DDot : lexer cs
 lexer (':':cs) = TDDot : lexer cs
 lexer ss@('[':cs) = lexer4list ss
 lexer ('{':cs) = TROpen : lexer cs
 lexer ('}':cs) = TRClose : lexer cs
 lexer ('<':cs) = TTypeOpen : lexer cs
 lexer ('>':cs) = TTypeClose : lexer cs
-lexer ('#':cs) = TSharp : lexer cs
 
 lexer4num :: String -> [Token]
 lexer4num cs = let (nums, rest) = span (isDigit) cs
@@ -154,7 +155,7 @@ lexer4var cs = case span (\c -> isAlpha c || c == '_') cs of
                 ("const", rest) -> TConst : lexer rest
                 (var, rest) -> case M.lookup var mapType of
                                     Just t -> TType t : lexer rest
-                                    Nothing -> if head rest == '>' then TType INVALID : lexer rest
+                                    Nothing -> if head rest == '>' then TType (INVALID var) : lexer rest
                                                else TVar var : lexer rest
 
 lexer4list :: String -> [Token]

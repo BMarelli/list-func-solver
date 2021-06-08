@@ -4,20 +4,21 @@ import Data.Map.Strict as M
 data Comms = Def String [Funcs]
            | Const String Exp
            | Eval Exp
+           | Infer Exp Int
            deriving (Show, Eq)
 
 data Exp = List (ListElements, Type)
          | Var (String, Type)
-         | Term [Funcs] Exp Int
+         | Term [Funcs] Exp
          deriving (Show, Eq)
 
 data Elements = Num Int | Generic deriving Eq
 type ListElements = [Elements]
 
-data Type = DEFAULT | INVALID | T1 | T2 deriving (Show, Eq)
+data Type = DEFAULT | INVALID String | T2 deriving (Show, Eq)
 
 mapType :: M.Map String Type
-mapType = M.fromList [("TList", T1), ("LList", T2)]
+mapType = M.fromList [("TList", DEFAULT), ("LList", T2)]
 
 type TypedList = Maybe (ListElements, Type)
 
@@ -40,6 +41,7 @@ type EnvVars = M.Map String Exp
 data Error = UndefinedFunc String
            | UndefinedVar String
            | InvalidAplication
-           | InvalidInfer
-           | InvalidType
+           | InvalidInfer Int Int
+           | InferRep
+           | InvalidType String
            deriving (Show, Eq)
