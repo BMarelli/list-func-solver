@@ -5,6 +5,7 @@ import System.IO
 import Data.Maybe
 import Data.List
 import Data.Char
+import Data.Map.Strict as M hiding (filter, map)
 import System.Console.Haskeline
 import System.Console.ANSI
 import Parse
@@ -17,6 +18,7 @@ import ListEval
 type File = Maybe FilePath
 
 data Commands = Solve String
+              | Clear String
               | Print
               | Reload
               | LoadFile File
@@ -34,8 +36,8 @@ putLn ss = liftIO $ putStrLn ss
 
 commands :: [CommandsUse]
 commands = [
-  -- Cmm [":infer"] "<exp> :: int" "infer expresion" (Infer Nothing),
   Cmm [":print"] "<exp>" "print AST of expresion" Print,
+  Cmm [":clear"] "<exp>" "clear variable or funtion from enviroment" (Clear ""),
   Cmm [":reload"] "" "reload enviroment" Reload,
   Cmm [":load"] "<file>" "load a file" (LoadFile Nothing),
   Cmm [":display"] "" "display enviroment" Display,
@@ -51,6 +53,7 @@ commandsEvaluation cs = if isPrefixOf ":" cs
           case mcmd of
             [Cmm _ _ _ f] -> case f of
                               LoadFile _ -> return $ LoadFile (Just (join rest))
+                              Clear _ -> return $ Clear (join rest)
                               _ -> return f
             xs -> outputStrLn "Comando ambiguo" >> return None
   else return (Solve cs)
@@ -91,6 +94,10 @@ printAST cs = do let (_, exp) = break isSpace cs
                    [] -> outputStrLn "Tiene que ser \":p <exp>\""
                    _ -> outputStrLn $ ppc $ parser exp
 
+clearFromEnviroment :: String -> EnvFuncs -> EnvVars -> InputT IO (EnvFuncs, EnvVars)
+clearFromEnviroment ss f v = if M.member ss f then return (M.delete ss f, v)
+                             else return (f, M.delete ss v)
+
 repl :: EnvFuncs -> EnvVars -> InputT IO ()
 repl f v = do input <- getInputLine"FL> "
               case input of
@@ -101,6 +108,8 @@ repl f v = do input <- getInputLine"FL> "
                                 Exit -> return ()
                                 None -> repl f v
                                 Print -> printAST c >> repl f v
+                                Clear cs -> do (f', v') <- clearFromEnviroment cs f v
+                                               repl f' v'
                                 Reload -> repl emptyEnvFuncs emptyEnvVars 
                                 Solve cs -> let exp = parser cs
                                             in case eval exp f v of
@@ -112,22 +121,6 @@ repl f v = do input <- getInputLine"FL> "
                                                                           putLn (pp (Right res))
                                                                           liftIO $ setSGR [Reset]
                                                                           repl f' v'
-                                -- Solve cs -> let exp = parser cs
-                                --                 (res, f', v') = eval exp f v
-                                --             in outputStrLn (pp res) >> repl f' v'
-                                -- Infer cs -> let exp = parser (fromJust cs)
-                                --                 (i, _, _) = infer exp f v
-                                --             in outputStrLn (show i) >> repl f v
-                                -- Infer cs -> let exp = parser (fromJust cs)
-                                --             in case infer exp f v of
-                                --                   (Left err, _, _) -> outputStrLn (fromJust cs) >> outputStrLn (pp (Left err)) >> repl f v
-                                --                   _ -> let (res, f', v') = eval exp f v
-                                --                        in outputStrLn (pp res) >> repl f' v'
-                                -- Solve cs -> let exp = parser cs
-                                --             in case infer exp f v of
-                                --                 (Left err, _, _) -> outputStrLn (pp (Left err)) >> repl f v
-                                --                 otherwise -> let (res, f', v') = eval exp f v
-                                --                              in outputStrLn (pp res) >> repl f' v'
                                 Display -> outputStrLn (ppEnv f v) >> repl f v
                                 Cmds -> outputStrLn printCommands >> repl f v
                                 Help -> outputStrLn printHelp >> repl f v

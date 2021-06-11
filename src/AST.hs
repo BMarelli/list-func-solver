@@ -15,10 +15,10 @@ data Exp = List (ListElements, Type)
 data Elements = Num Int | Generic deriving Eq
 type ListElements = [Elements]
 
-data Type = DEFAULT | INVALID String | T2 deriving (Show, Eq)
+data Type = DEFAULT | INVALID String | T2 | T3 deriving (Show, Eq)
 
 mapType :: M.Map String Type
-mapType = M.fromList [("TList", DEFAULT), ("LList", T2)]
+mapType = M.fromList [("TList", DEFAULT), ("LList", T2), ("CList", T3)]
 
 type TypedList = Maybe (ListElements, Type)
 

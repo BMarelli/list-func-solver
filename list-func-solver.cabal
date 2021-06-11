@@ -27,6 +27,7 @@ library
   exposed-modules:
       AST
       Lib
+      List.CListFList
       List.FList
       List.ListFList
       List.TupleFList

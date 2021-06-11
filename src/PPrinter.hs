@@ -56,10 +56,6 @@ lookupKey val = M.foldrWithKey cmp []
 
 ppType :: Type -> String
 ppType t = head $ lookupKey t mapType
--- ppType DEFAULT = let t = M.lookup "Default" mapType
---                  in ppType (fromJust t)
--- ppType t = let ss = lookupKey t mapType
---            in head ss
 
 ppError :: Error -> String
 ppError (UndefinedFunc ss) = "Error: La funcion " ++ ss ++ " no esta definida."

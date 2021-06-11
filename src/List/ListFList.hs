@@ -36,21 +36,21 @@ instance FList [] where
            | otherwise     = Left InvalidAplication
       where
         getLast :: [Elements] -> Int
-        getLast [Num x] = x
-        getLast (_:xs) = getLast xs
+        getLast [Num v] = v
+        getLast (_:ys) = getLast ys
         rep_ :: ([Funcs], [Funcs]) -> [Elements] -> Either Error [Elements]
         rep_ _ [] = Left InvalidAplication
-        rep_ ([], rst) l@((Num x):xs) = if getLast xs == x then Right l
-                                        else rep_ (reverse rst, []) l
+        rep_ ([], rst) l@((Num x):xs) | getLast xs == x = Right l
+                                      | otherwise       = rep_ (reverse rst, []) l
         rep_ ([], rst) l = rep_ (reverse rst, []) l
-        rep_ (f:fs, []) l = case f of
-                        Zero or -> rep_ (fs, [f]) (zero or l)
-                        Succ or -> rep_ (fs, [f]) (fromRight (succesor or l))
-                        Delete or -> rep_ (fs, [f]) (fromRight (delete or l))
-                        Rep fns -> rep_ (fs, [f]) (fromRight(rep fns l))
+        rep_ (f:fs, []) l@((Num x):xs) | getLast xs == x = Right l
+                                       | otherwise       = case f of
+                                                            Zero or -> rep_ (fs, [f]) (zero or l)
+                                                            Succ or -> rep_ (fs, [f]) (fromRight (succesor or l))
+                                                            Delete or -> rep_ (fs, [f]) (fromRight (delete or l))
+                                                            Rep fns -> rep_ (fs, [f]) (fromRight (rep fns l))
         rep_ (f:fs, rst) l = case f of
                                 Zero or -> rep_ (fs, f:rst) (zero or l)
                                 Succ or -> rep_ (fs, f:rst) (fromRight (succesor or l))
-                                Delete or -> rep_ (fs, f:rst) (fromRight(delete or l))
+                                Delete or -> rep_ (fs, f:rst) (fromRight (delete or l))
                                 Rep fns -> rep_ (fs, f:rst) (fromRight(rep fns l))
-
