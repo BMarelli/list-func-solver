@@ -98,28 +98,6 @@ evalFunc ((Rep fs):fns) = do fns' <- evalFunc fns
 evalFunc (f:fns) = do fns' <- evalFunc fns
                       return $ f:fns'
 
-evalComms :: (MonadState m, MonadError m) => Comms -> m TypedList
-evalComms (Eval exp) = do evalExp exp
-evalComms (Def ss fs) = do fns <- evalFunc fs
-                           updateFunc ss fns
-                           return Nothing
-evalComms (Const ss exp) = do l <- evalExp exp
-                              updateVar ss (List (fromJust l))
-                              return Nothing
-evalComms (Infer exp n) = inferExp exp n 0 >> return Nothing
-
-
-eval' :: Comms -> EnvFuncs -> EnvVars -> Either Error (TypedList, EnvFuncs, EnvVars)
-eval' comm = runStateError (evalComms comm)
-
-eval :: [Comms] -> EnvFuncs -> EnvVars -> (Either Error TypedList, EnvFuncs, EnvVars)
-eval [x] f v = case eval' x f v of
-                  Left err -> (Left err, f, v)
-                  Right (res, f', v') -> (Right res, f', v')
-eval (x:xs) f v = case eval' x f v of
-                      Right (_, f', v') -> eval xs f' v'
-                      Left err -> (Left err, f, v)
-
 inferExp :: (MonadState m, MonadError m) => Exp -> Int -> Int -> m Int
 inferExp (List (l,_)) n i = let len = length l
                             in if n == i + len then return n
@@ -133,3 +111,24 @@ inferExp (Term ((Delete _):fs) exp) n i = inferExp (Term fs exp) n (i-1)
 inferExp (Term ((Rep fns):fs) exp) n _ = throw InferRep
 inferExp (Term ((Defined ss):fs) exp) n i = do f <- look4func ss
                                                inferExp (Term (f++fs) exp) n i
+
+evalComms :: (MonadState m, MonadError m) => Comms -> m TypedList
+evalComms (Eval exp) = do evalExp exp
+evalComms (Def ss fs) = do fns <- evalFunc fs
+                           updateFunc ss fns
+                           return Nothing
+evalComms (Const ss exp) = do l <- evalExp exp
+                              updateVar ss (List (fromJust l))
+                              return Nothing
+evalComms (Infer exp n) = inferExp exp n 0 >> return Nothing
+
+eval' :: Comms -> EnvFuncs -> EnvVars -> Either Error (TypedList, EnvFuncs, EnvVars)
+eval' comm = runStateError (evalComms comm)
+
+eval :: [Comms] -> EnvFuncs -> EnvVars -> (Either Error TypedList, EnvFuncs, EnvVars)
+eval [x] f v = case eval' x f v of
+                  Left err -> (Left err, f, v)
+                  Right (res, f', v') -> (Right res, f', v')
+eval (x:xs) f v = case eval' x f v of
+                      Right (_, f', v') -> eval xs f' v'
+                      Left err -> (Left err, f, v)

@@ -15,7 +15,7 @@ getLast xs = getLast' xs []
 fromRight :: Either a b -> b
 fromRight (Right x) = x
 
--- =====================================================================================================================
+-- =============================================== Funciones de CList ==================================================
 consCL :: a -> CList a -> CList a
 consCL v Empty = CUnit v
 consCL v (CUnit x) = Consnoc v Empty x
@@ -51,7 +51,6 @@ delLastCL (Consnoc x xs y) = case xs of
                                 Empty -> CUnit x
                                 CUnit v -> Consnoc x Empty v
                                 _ -> Consnoc x (delLastCL xs) (lastCL xs)
-
 -- =====================================================================================================================
 
 instance FList CList where
@@ -61,9 +60,7 @@ instance FList CList where
 
   fromList [] = Empty
   fromList [x] = CUnit x
-  fromList (x:xs) = let (y, ys) = getLast xs
-                    in Consnoc x (fromList ys) y
-
+  fromList (x:xs) = consCL x (fromList xs)
   quote Empty = []
   quote (CUnit x) = [x]
   quote (Consnoc x xs y) = x:(quote xs ++ [y])
@@ -98,10 +95,10 @@ instance FList CList where
       rep_ ([], rst) l = rep_ (reverse rst, []) l
       rep_ (f:fs, []) l@(Consnoc (Num x) _ (Num y)) | x == y    = Right l
                                                     | otherwise = case f of
-                                                                    Zero or -> rep_ (fs, [f]) (zero or l)
-                                                                    Succ or -> rep_ (fs, [f]) (fromRight (succesor or l))
-                                                                    Delete or -> rep_ (fs, [f]) (fromRight (delete or l))
-                                                                    Rep fns -> rep_ (fs, [f]) (fromRight (rep fns l))
+                                                                   Zero or -> rep_ (fs, [f]) (zero or l)
+                                                                   Succ or -> rep_ (fs, [f]) (fromRight (succesor or l))
+                                                                   Delete or -> rep_ (fs, [f]) (fromRight (delete or l))
+                                                                   Rep fns -> rep_ (fs, [f]) (fromRight (rep fns l))
       rep_ (f:fs, rst) l = case f of
                             Zero or -> rep_ (fs, f:rst) (zero or l)
                             Succ or -> rep_ (fs, f:rst) (fromRight (succesor or l))
