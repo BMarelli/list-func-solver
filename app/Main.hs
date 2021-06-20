@@ -5,7 +5,7 @@ import System.IO
 import Data.Maybe
 import Data.List
 import Data.Char
-import Data.Map.Strict as M hiding (filter, map)
+import Data.Map.Strict as M hiding (filter, map, drop)
 import System.Console.Haskeline
 import System.Console.ANSI
 import Parse
@@ -23,7 +23,6 @@ data Commands = Solve String
               | Reload
               | LoadFile File
               | Display
-              | Cmds
               | Help
               | Exit
               | None
@@ -41,8 +40,7 @@ commands = [
   Cmm [":reload"] "" "reload enviroment" Reload,
   Cmm [":load"] "<file>" "load a file" (LoadFile Nothing),
   Cmm [":display"] "" "display enviroment" Display,
-  Cmm [":comms"] "" "display commands" Cmds,
-  Cmm [":help", ":?"] "" "display the documentation" Help,
+  Cmm [":help", ":?"] "" "display commands and the documentation" Help,
   Cmm [":quit"] "" "exit" Exit
   ]
 
@@ -68,7 +66,7 @@ printCommands = join $ map ((++"\n").f) commands
                              in text ++ replicate (30 - length text) ' ' ++ inf
 
 printHelp :: String
-printHelp = "TODO!"
+printHelp = printCommands ++"\nTODO!"
 
 fileManagement :: FilePath -> InputT IO (Maybe String)
 fileManagement file = if isSuffixOf ".fl" file
@@ -76,23 +74,36 @@ fileManagement file = if isSuffixOf ".fl" file
                                 (do lns <- readFile file
                                     return $ Just lns)
                                 (\err -> do let err_ = show (err :: IOException)
-                                            putStrLn $ "Se produjo un erro al abrir el archivo " ++ file
+                                            putStrLn $ "Se produjo un error al abrir el archivo " ++ file
                                             return Nothing)
-                      else outputStrLn "El archivo tiene que ser .fl" >> return Nothing
+                      else do liftIO $ setSGR [SetColor Foreground Vivid Red]
+                              putLn "El archivo tiene que ser .fl"
+                              liftIO $ setSGR [Reset]
+                              return Nothing
 
 fileEvals :: FilePath -> EnvFuncs -> EnvVars -> InputT IO (EnvFuncs, EnvVars)
 fileEvals file f l = do lns <- fileManagement file
                         case lns of
                           Nothing -> return (f, l)
-                          Just lns -> let rest = parser lns
-                                          (_, f', l') = eval rest f l
-                                      in return (f', l')
+                          Just lns -> do liftIO $ setSGR [SetColor Foreground Vivid Green]
+                                         putLn $ "Se abrio el archivo "++ file ++ " correctamente!."
+                                         liftIO $ setSGR [Reset]
+                                         let rest = parser lns
+                                             (_, f', l') = eval rest f l False
+                                         return (f', l')
 
-printAST :: String -> InputT IO ()
-printAST cs = do let (_, exp) = break isSpace cs
-                 case exp of
-                   [] -> outputStrLn "Tiene que ser \":p <exp>\""
-                   _ -> outputStrLn $ ppc $ parser exp
+printAST :: EnvFuncs -> EnvVars -> String -> InputT IO ()
+printAST f v cs = do let (_, exp) = break isSpace cs
+                     case exp of
+                       [] -> outputStrLn "Tiene que ser \":p <exp>\""
+                       _ -> do let exp' = parser (drop 3 cs)
+                               case eval exp' f v True of
+                                 (Left err, f', v') -> do liftIO $ setSGR [SetColor Foreground Vivid Red]
+                                                          putLn (pp (Left err))
+                                                          liftIO $ setSGR [Reset]
+                                 (Right res, f', v') -> do liftIO $ setSGR [SetColor Foreground Vivid Green]
+                                                           putLn (ppc exp')
+                                                           liftIO $ setSGR [Reset]
 
 clearFromEnviroment :: String -> EnvFuncs -> EnvVars -> InputT IO (EnvFuncs, EnvVars)
 clearFromEnviroment ss f v = if M.member ss f then return (M.delete ss f, v)
@@ -107,12 +118,12 @@ repl f v = do input <- getInputLine"FL> "
                              case cmm of
                                 Exit -> return ()
                                 None -> repl f v
-                                Print -> printAST c >> repl f v
+                                Print -> printAST f v c >> repl f v
                                 Clear cs -> do (f', v') <- clearFromEnviroment cs f v
                                                repl f' v'
                                 Reload -> repl emptyEnvFuncs emptyEnvVars 
                                 Solve cs -> let exp = parser cs
-                                            in case eval exp f v of
+                                            in case eval exp f v False of
                                                 (Left err, f', v') -> do liftIO $ setSGR [SetColor Foreground Vivid Red]
                                                                          putLn (pp (Left err))
                                                                          liftIO $ setSGR [Reset]
@@ -122,7 +133,6 @@ repl f v = do input <- getInputLine"FL> "
                                                                           liftIO $ setSGR [Reset]
                                                                           repl f' v'
                                 Display -> outputStrLn (ppEnv f v) >> repl f v
-                                Cmds -> outputStrLn printCommands >> repl f v
                                 Help -> outputStrLn printHelp >> repl f v
                                 LoadFile (Just file) -> do (f', v') <- fileEvals file f v
                                                            repl f' v'
@@ -130,6 +140,6 @@ repl f v = do input <- getInputLine"FL> "
 
 main :: IO ()
 main = do putStrLn "Evaluador de Funciones de Listas."
-          putStrLn ":? o :help para ver la documentacion."
-          putStrLn ":comms para ver los comandos."
-          runInputT defaultSettings (repl emptyEnvFuncs emptyEnvVars)
+          putStrLn ":? o :help para conocer los comandos y como utilizar el programa."
+          (f, v) <- runInputT defaultSettings $ fileEvals "Ejemplos/Prelude.fl" emptyEnvFuncs emptyEnvVars
+          runInputT defaultSettings (repl f v)

@@ -55,6 +55,7 @@ lookupKey val = M.foldrWithKey cmp []
                             else found
 
 ppType :: Type -> String
+ppType DEFAULT = "TList"
 ppType t = head $ lookupKey t mapType
 
 ppError :: Error -> String

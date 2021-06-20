@@ -23,7 +23,7 @@ consCL v (Consnoc hd xs lst) = Consnoc v (consCL hd xs) lst
 
 snocCL :: a -> CList a -> CList a
 snocCL v Empty = CUnit v
-snocCL v (CUnit x) = Consnoc v Empty x
+snocCL v (CUnit x) = Consnoc x Empty v
 snocCL v (Consnoc hd xs lst) = Consnoc hd (snocCL lst xs) v
 
 headCL :: CList a -> a
@@ -61,9 +61,12 @@ instance FList CList where
   fromList [] = Empty
   fromList [x] = CUnit x
   fromList (x:xs) = consCL x (fromList xs)
+  
   quote Empty = []
   quote (CUnit x) = [x]
   quote (Consnoc x xs y) = x:(quote xs ++ [y])
+
+  printFL l = show l
 
   zero _ Empty = CUnit (Num 0)
   zero L (CUnit x) = Consnoc (Num 0) Empty x

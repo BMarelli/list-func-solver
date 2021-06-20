@@ -8,9 +8,11 @@ fromRight :: Either a b -> b
 fromRight (Right x) = x
 
 balance :: TList Elements -> TList Elements
+balance (TList [] [x]) = TList [x] []
 balance (TList xs []) = fromList xs :: TList Elements
-balance (TList [] ys) = fromList ys :: TList Elements
-
+balance (TList [] ys) = fromList (reverse ys) :: TList Elements
+balance l = l
+ 
 instance FList TList where
   lengthFL (TList xs ys) = length xs + length ys
 
@@ -20,6 +22,8 @@ instance FList TList where
                   in TList xs (reverse ys)
   
   quote (TList xs ys) = xs ++ reverse ys
+
+  printFL l = show l
 
   zero L (TList xs ys) = TList (Num 0:xs) ys
   zero R (TList xs ys) = TList xs (Num 0:ys)

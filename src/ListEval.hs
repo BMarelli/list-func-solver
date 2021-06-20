@@ -2,15 +2,19 @@
 {-# LANGUAGE TypeApplications, ScopedTypeVariables #-}
 -- TODO:
 module ListEval where
-
+import Debug.Trace
 import AST
 import Data.Map.Strict as M hiding (splitAt, delete, map)
 import Data.Maybe
+import qualified Data.Sequence as S
 import Control.Monad
 import List.FList
 import List.TupleFList
 import List.ListFList
 import List.CListFList
+import List.TreeFList
+import List.SeqFList
+import Control.Monad.IO.Class
 import Monads
 
 changeType :: Exp -> Type -> Exp
@@ -46,48 +50,65 @@ changeType (Term fns exp) t = Term fns (changeType exp t)
 -- =====================================================================================================================
 
 -- ======================================== Mejora Rendimiento =========================================================
-aplicar' :: forall l m . (FList l, MonadState m, MonadError m) => [Funcs] -> ListElements -> m (l Elements)
-aplicar' fs l = aplicar_ fs (List.FList.fromList l)
+aplicar' :: forall l m . (FList l, MonadState m, MonadError m) => [Funcs] -> ListElements -> Bool -> m (l Elements)
+aplicar' fs l bool | bool      = do l' <- aplicar_ fs (List.FList.fromList l)
+                                    traceM (printFL l')
+                                    return l'
+                   | otherwise = aplicar_ fs (List.FList.fromList l)
     where
       aplicar_ :: forall l m . (FList l, MonadState m, MonadError m) => [Funcs] -> l Elements -> m (l Elements)
       aplicar_ [] l = return l
-      aplicar_ ((Zero or):fs) l = let l' = zero or l
-                              in aplicar_ fs l'
+      aplicar_ ((Zero or):fs) l = do let l' = zero or l
+                                    --  traceM ("zero " ++ show or ++ "-" ++ printFL l')
+                                     aplicar_ fs l'
       aplicar_ ((Succ or):fs) l = case succesor or l of
                                   Left err -> throw err
                                   Right l' -> aplicar_ fs l'
+                                  -- Right l' -> traceM ("succ " ++ show or ++ "-" ++ printFL l') >> aplicar_ fs l'
       aplicar_ ((Delete or):fs) l = case delete or l of
                                   Left err -> throw err
                                   Right l' -> aplicar_ fs l'
+                                  -- Right l' -> traceM ("delete " ++ show or ++ "-" ++ printFL l') >> aplicar_ fs l'
       aplicar_ ((Rep f):fs) l = case rep f l of
                                   Left err -> throw err
                                   Right l' -> aplicar_ fs l'
+                                  -- Right l' -> traceM ("rep " ++ "-" ++ printFL l') >> aplicar_ fs l'
       aplicar_ ((Defined ss):fs) l = do fns <- look4func ss
                                         aplicar_ (fns ++ fs) l
 
-aplicar :: (MonadState m, MonadError m) => [Funcs] -> ListElements -> Type -> m (ListElements, Type)
-aplicar fs xs DEFAULT = do l <- aplicar' @TList fs xs
-                           return (quote l, DEFAULT)
-aplicar fs xs T2 = do l <- aplicar' @[] fs xs
-                      return (quote l, T2)
-aplicar fs xs T3 = do l <- aplicar' @CList fs xs
-                      return (quote l, T3)
+aplicar :: (MonadState m, MonadError m) => [Funcs] -> ListElements -> Type -> Bool -> m (ListElements, Type)
+aplicar fs xs DEFAULT bool = do l <- aplicar' @TList fs xs  bool
+                                return (quote l, DEFAULT)
+aplicar fs xs T1 bool = do l <- aplicar' @TList fs xs bool
+                           return (quote l, T1)
+aplicar fs xs T2 bool = do l <- aplicar' @[] fs xs bool
+                           return (quote l, T2)
+aplicar fs xs T3 bool = do l <- aplicar' @CList fs xs bool
+                           return (quote l, T3)
+aplicar fs xs T4 bool = do l <- aplicar' @Tree fs xs bool
+                           return (quote l, T4)
+aplicar fs xs T5 bool = do l <- aplicar' @S.Seq fs xs bool
+                           return (quote l, T5)
+aplicar _ _ (INVALID ss) bool = throw (InvalidType ss)
 
-evalExp :: (MonadState m, MonadError m) => Exp -> m TypedList
-evalExp (List (xs, t)) = case t of
+evalExp :: (MonadState m, MonadError m) => Exp -> Bool -> m TypedList
+evalExp (List (xs, t)) bool = case t of
                               INVALID ss -> throw (InvalidType ss)
                               _ -> return $ Just (xs, t)
-evalExp (Var (var, t)) = case t of
+evalExp (Var (var, t)) bool = case t of
                               INVALID ss -> throw (InvalidType ss)
+                              DEFAULT -> do exp <- look4var var
+                                            evalExp exp bool
                               _ -> do exp <- look4var var
-                                      evalExp (changeType exp t) 
+                                      evalExp (changeType exp t) bool
 
-evalExp (Term fs exp) = do l <- evalExp exp
-                           fns <- evalFunc fs 
-                           res <- uncurry (aplicar fns) (fromJust l)
-                           return $ Just res
+evalExp (Term fs exp) bool = do l <- evalExp exp bool
+                                fns <- evalFunc fs
+                                -- res <- uncurry (aplicar fns) (fromJust l)
+                                res <- uncurry (aplicar fns) (fromJust l) bool
+                                return $ Just res
 -- =====================================================================================================================
-                            
+
 evalFunc :: (MonadState m, MonadError m) => [Funcs] -> m [Funcs]
 evalFunc [] = return []
 evalFunc ((Defined ss):fns) = do fs <- look4func ss
@@ -112,23 +133,23 @@ inferExp (Term ((Rep fns):fs) exp) n _ = throw InferRep
 inferExp (Term ((Defined ss):fs) exp) n i = do f <- look4func ss
                                                inferExp (Term (f++fs) exp) n i
 
-evalComms :: (MonadState m, MonadError m) => Comms -> m TypedList
-evalComms (Eval exp) = do evalExp exp
-evalComms (Def ss fs) = do fns <- evalFunc fs
-                           updateFunc ss fns
+evalComms :: (MonadState m, MonadError m) => Comms -> Bool -> m TypedList
+evalComms (Eval exp) bool = do evalExp exp bool
+evalComms (Def ss fs) bool = do -- fns <- evalFunc fs
+                           updateFunc ss fs
                            return Nothing
-evalComms (Const ss exp) = do l <- evalExp exp
-                              updateVar ss (List (fromJust l))
-                              return Nothing
-evalComms (Infer exp n) = inferExp exp n 0 >> return Nothing
+evalComms (Const ss exp) bool = do l <- evalExp exp bool
+                                   updateVar ss (List (fromJust l))
+                                   return Nothing
+evalComms (Infer exp n) bool = inferExp exp n 0 >> return Nothing
 
-eval' :: Comms -> EnvFuncs -> EnvVars -> Either Error (TypedList, EnvFuncs, EnvVars)
-eval' comm = runStateError (evalComms comm)
+eval' :: Comms -> EnvFuncs -> EnvVars -> Bool -> Either Error (TypedList, EnvFuncs, EnvVars)
+eval' comm f v bool = runStateError (evalComms comm bool) f v
 
-eval :: [Comms] -> EnvFuncs -> EnvVars -> (Either Error TypedList, EnvFuncs, EnvVars)
-eval [x] f v = case eval' x f v of
+eval :: [Comms] -> EnvFuncs -> EnvVars -> Bool -> (Either Error TypedList, EnvFuncs, EnvVars)
+eval [x] f v bool = case eval' x f v bool of
                   Left err -> (Left err, f, v)
                   Right (res, f', v') -> (Right res, f', v')
-eval (x:xs) f v = case eval' x f v of
-                      Right (_, f', v') -> eval xs f' v'
+eval (x:xs) f v bool = case eval' x f v bool of
+                      Right (_, f', v') -> eval xs f' v' bool
                       Left err -> (Left err, f, v)

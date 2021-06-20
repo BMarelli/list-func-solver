@@ -25,6 +25,7 @@ dependencies:
 - haskeline
 - array
 - ansi-terminal
+- vector
 
 library:
   source-dirs: src

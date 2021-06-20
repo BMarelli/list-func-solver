@@ -11,6 +11,8 @@ instance FList [] where
 
   quote l = l
 
+  printFL l = show l
+
   zero L l = (Num 0):l
   zero R l = l ++ [Num  0]
 
