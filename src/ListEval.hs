@@ -1,6 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeApplications, ScopedTypeVariables #-}
--- TODO:
+
 module ListEval where
 import Debug.Trace
 import AST
@@ -17,39 +17,15 @@ import List.SeqFList
 import Control.Monad.IO.Class
 import Monads
 
+-- Cambia el tipo de una expresion por otro
 changeType :: Exp -> Type -> Exp
 changeType (List (xs, _)) t = List (xs, t)
 changeType (Var (var, _)) t = Var (var, t)
 changeType (Term fns exp) t = Term fns (changeType exp t)
 
--- ========================================= Peor Rendimiento ==========================================================
--- aplicar' :: forall l m . (FList l, MonadState m, MonadError m) => Funcs -> ListElements -> m (l Elements)
--- aplicar' (Zero or) xs = return $ zero or (List.FList.fromList xs)
--- aplicar' (Succ or) xs = case succesor or (List.FList.fromList xs) of
---                               Left err -> throw err
---                               Right l -> return l
--- aplicar' (Delete or) xs = case delete or (List.FList.fromList xs) of
---                               Left err -> throw err
---                               Right l -> return l
--- aplicar' (Rep fs) xs = case rep fs (List.FList.fromList xs) of
---                               Left err -> throw err
---                               Right l -> return l
--- aplicar' (Defined ss) xs = do fns <- look4func ss
---                               aplicarDefined fns (List.FList.fromList xs)
---     where
---       aplicarDefined :: forall l m . (FList l, MonadState m, MonadError m) => [Funcs] -> l Elements -> m (l Elements)
---       aplicarDefined [] l = return l
---       aplicarDefined (f:fs) l = do l' <- aplicar' f (quote l)
---                                    aplicarDefined fs l'
-
--- aplicar :: (MonadState m, MonadError m) => Funcs -> ListElements -> Type -> m (ListElements, Type)
--- aplicar f xs DEFAULT = do l <- aplicar' @TList f xs
---                           return (quote l, DEFAULT)
--- aplicar f xs T2 = do l <- aplicar' @[] f xs
---                      return (quote l, T2)
--- =====================================================================================================================
-
 -- ======================================== Mejora Rendimiento =========================================================
+-- Aplicamos las funciones a lista de elementos como la instancia de FList que recibimos.
+-- En el caso de que bool sea True, utilizamos traceM para printear el resultado de aplicar las funciones a la lista
 aplicar' :: forall l m . (FList l, MonadState m, MonadError m) => [Funcs] -> ListElements -> Bool -> m (l Elements)
 aplicar' fs l bool | bool      = do l' <- aplicar_ fs (List.FList.fromList l)
                                     traceM (printFL l')
@@ -59,23 +35,25 @@ aplicar' fs l bool | bool      = do l' <- aplicar_ fs (List.FList.fromList l)
       aplicar_ :: forall l m . (FList l, MonadState m, MonadError m) => [Funcs] -> l Elements -> m (l Elements)
       aplicar_ [] l = return l
       aplicar_ ((Zero or):fs) l = do let l' = zero or l
-                                    --  traceM ("zero " ++ show or ++ "-" ++ printFL l')
+                                    --  traceM ("zero " ++ show or ++ " -> " ++ printFL l')
                                      aplicar_ fs l'
       aplicar_ ((Succ or):fs) l = case succesor or l of
                                   Left err -> throw err
                                   Right l' -> aplicar_ fs l'
-                                  -- Right l' -> traceM ("succ " ++ show or ++ "-" ++ printFL l') >> aplicar_ fs l'
+                                  -- Right l' -> traceM ("succ " ++ show or ++ " -> " ++ printFL l') >> aplicar_ fs l'
       aplicar_ ((Delete or):fs) l = case delete or l of
                                   Left err -> throw err
                                   Right l' -> aplicar_ fs l'
-                                  -- Right l' -> traceM ("delete " ++ show or ++ "-" ++ printFL l') >> aplicar_ fs l'
+                                  -- Right l' -> traceM ("delete " ++ show or ++ " -> " ++ printFL l') >> aplicar_ fs l'
       aplicar_ ((Rep f):fs) l = case rep f l of
                                   Left err -> throw err
                                   Right l' -> aplicar_ fs l'
-                                  -- Right l' -> traceM ("rep " ++ "-" ++ printFL l') >> aplicar_ fs l'
+                                  -- Right l' -> traceM ("rep " ++ " -> " ++ printFL l') >> aplicar_ fs l'
       aplicar_ ((Defined ss):fs) l = do fns <- look4func ss
                                         aplicar_ (fns ++ fs) l
 
+-- Dada una lista de funciones, una lista de elementos y un instancia de FList
+-- Aplica las funciones a la lista de elementos utilizando la instancia de FList
 aplicar :: (MonadState m, MonadError m) => [Funcs] -> ListElements -> Type -> Bool -> m (ListElements, Type)
 aplicar fs xs DEFAULT bool = do l <- aplicar' @TList fs xs  bool
                                 return (quote l, DEFAULT)
@@ -91,6 +69,8 @@ aplicar fs xs T5 bool = do l <- aplicar' @S.Seq fs xs bool
                            return (quote l, T5)
 aplicar _ _ (INVALID ss) bool = throw (InvalidType ss)
 
+-- Evalua una expresion y devuelve una TypedList como resultado
+-- En el caso que se produzca un error, lo devolvemos
 evalExp :: (MonadState m, MonadError m) => Exp -> Bool -> m TypedList
 evalExp (List (xs, t)) bool = case t of
                               INVALID ss -> throw (InvalidType ss)
@@ -109,6 +89,8 @@ evalExp (Term fs exp) bool = do l <- evalExp exp bool
                                 return $ Just res
 -- =====================================================================================================================
 
+-- Evalua una lista de funciones y devuelve una lista de funciones canonicas
+-- Utilizamos esta funcion para remplazar las funciones definidas
 evalFunc :: (MonadState m, MonadError m) => [Funcs] -> m [Funcs]
 evalFunc [] = return []
 evalFunc ((Defined ss):fns) = do fs <- look4func ss
@@ -119,6 +101,9 @@ evalFunc ((Rep fs):fns) = do fns' <- evalFunc fns
 evalFunc (f:fns) = do fns' <- evalFunc fns
                       return $ f:fns'
 
+-- Infiere la longitud de una expresion 
+-- Como no podemos inferir la longitud sobre la funcion Rep, devolvemos un error de inferencia sobre Rep
+-- En el caso que se produzca un error sobre la inferencia, devolvemos un error de inferencia
 inferExp :: (MonadState m, MonadError m) => Exp -> Int -> Int -> m Int
 inferExp (List (l,_)) n i = let len = length l
                             in if n == i + len then return n
@@ -133,6 +118,7 @@ inferExp (Term ((Rep fns):fs) exp) n _ = throw InferRep
 inferExp (Term ((Defined ss):fs) exp) n i = do f <- look4func ss
                                                inferExp (Term (f++fs) exp) n i
 
+-- Evalua los distintos comandos y devuelve una TypedList como resultado
 evalComms :: (MonadState m, MonadError m) => Comms -> Bool -> m TypedList
 evalComms (Eval exp) bool = do evalExp exp bool
 evalComms (Def ss fs) bool = do -- fns <- evalFunc fs
@@ -143,9 +129,15 @@ evalComms (Const ss exp) bool = do l <- evalExp exp bool
                                    return Nothing
 evalComms (Infer exp n) bool = inferExp exp n 0 >> return Nothing
 
+-- Evalua un comando con los enviroments dados
 eval' :: Comms -> EnvFuncs -> EnvVars -> Bool -> Either Error (TypedList, EnvFuncs, EnvVars)
 eval' comm f v bool = runStateError (evalComms comm bool) f v
 
+-- [Comms]: Lista de comandos
+-- EnvFuncs: enviroment de funciones
+-- EnvVars: enviroment de variables
+-- Bool: bandera que pasamos para al momento de hacer el print del AST. Lo utilizamos para printear la lista como una
+--       FList
 eval :: [Comms] -> EnvFuncs -> EnvVars -> Bool -> (Either Error TypedList, EnvFuncs, EnvVars)
 eval [x] f v bool = case eval' x f v bool of
                   Left err -> (Left err, f, v)

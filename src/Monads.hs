@@ -1,11 +1,16 @@
--- {-# LANGUAGE GADTs #-}
--- {-# LANGUAGE MultiParamTypeClasses #-}
-
 module Monads where
 import AST
 import List.FList
 import Data.Map.Strict as M hiding (splitAt, delete)
 import Control.Monad
+
+-- Definimos la monada estado. Tiene las siguientes funciones:
+-- look4func : Dado el nombre de una funcion (String), si la funcion esta dentro del enviroment, devuelve la funcion
+--             sino un error.
+-- updateFunc : Dado el nombre de una funcion (String) y una funcion, agrega o remplaza la funcion en el enviroment.
+-- look4var : Dado el nombre de una variable (String), si la variable esta dentro del enviroment, devuelve la variable
+--            sino un error.
+-- updateVar : Dado el nombre de una variable (String) y una variable, agrega o remplaza la variable en el enviroment.
 
 class Monad m => MonadState m where
   look4func :: String -> m [Funcs]
@@ -14,9 +19,12 @@ class Monad m => MonadState m where
   look4var :: String  -> m Exp
   updateVar :: String -> Exp -> m ()
 
+-- Definimos la monada de error. Tiene las siguientes funciones:
+-- throw : Dado un error, lo devuelve
 class Monad m => MonadError m where
   throw :: Error -> m a
 
+-- Definimos los enviroment vacios
 emptyEnvFuncs :: EnvFuncs
 emptyEnvFuncs = M.empty
 

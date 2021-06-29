@@ -9,9 +9,14 @@ fromRight (Right x) = x
 
 balance :: TList Elements -> TList Elements
 balance (TList [] [x]) = TList [x] []
-balance (TList xs []) = fromList xs :: TList Elements
-balance (TList [] ys) = fromList (reverse ys) :: TList Elements
-balance l = l
+balance (TList xs ys) = let list = xs ++ reverse ys
+                            len = length list
+                            mid = div len 2
+                            (xs', ys') = splitAt mid list
+                        in TList xs' (reverse ys')
+-- balance (TList xs []) = fromList xs :: TList Elements
+-- balance (TList [] ys) = fromList (reverse ys) :: TList Elements
+-- balance l = l
  
 instance FList TList where
   lengthFL (TList xs ys) = length xs + length ys
@@ -64,15 +69,15 @@ instance FList TList where
       rep_ ([], rst) l = rep_ (reverse rst, []) (balance l)
       rep_ (f:fs, []) l@(TList ((Num x):xs) ((Num y):ys)) | x == y    = Right l
                                                           | otherwise = case f of
-                                                                       Zero or -> rep_ (fs, [f]) (zero or l)
-                                                                       Succ or -> rep_ (fs, [f]) (fromRight (succesor or l))
-                                                                       Delete or -> rep_ (fs, [f]) (fromRight (delete or l))
-                                                                       Rep fns -> rep_ (fs, [f]) (fromRight (rep fns l))
+                                                                       Zero or -> rep_ (fs, [f]) (zero or (balance l))
+                                                                       Succ or -> rep_ (fs, [f]) (fromRight (succesor or (balance l)))
+                                                                       Delete or -> rep_ (fs, [f]) (fromRight (delete or (balance l)))
+                                                                       Rep fns -> rep_ (fs, [f]) (fromRight (rep fns (balance l)))
       rep_ (f:fs, rst) l = case f of
-                              Zero or -> rep_ (fs, f:rst) (zero or l)
-                              Succ or -> rep_ (fs, f:rst) (fromRight (succesor or l))
-                              Delete or -> rep_ (fs, f:rst) (fromRight (delete or l))
-                              Rep fns -> rep_ (fs, f:rst) (fromRight (rep fns l))
+                              Zero or -> rep_ (fs, f:rst) (zero or (balance l))
+                              Succ or -> rep_ (fs, f:rst) (fromRight (succesor or (balance l)))
+                              Delete or -> rep_ (fs, f:rst) (fromRight (delete or (balance l)))
+                              Rep fns -> rep_ (fs, f:rst) (fromRight (rep fns (balance l)))
 
 -- instance Show a => Show (TList a) where
 --   show (TList (xs, ys)) = "[" ++ show_ (length xs) (length ys) xs (reverse ys) 0
