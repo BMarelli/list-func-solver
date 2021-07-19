@@ -21,7 +21,7 @@ data Elements = Num Int | Generic deriving Eq
 -- Lista de elementos
 type ListElements = [Elements]
 
--- Tipos de estructuras
+-- "Tipos de estructuras" que hacen referencia a las instancias de FList
 -- DEFAULT : Tipo default, lo utilizamos cuando no especificamos el tipo
 -- INVALID ss : Tipo invalido, lo utilizamos para devolver un error
 data Type = DEFAULT | INVALID String | T1 | T2 | T3 | T4 | T5
