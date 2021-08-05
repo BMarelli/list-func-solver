@@ -1,6 +1,8 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeApplications, ScopedTypeVariables #-}
 
+
+
 module ListEval where
 import Debug.Trace
 import AST
@@ -55,7 +57,7 @@ aplicar' fs l bool | bool      = do l' <- aplicar_ fs (List.FList.fromList l)
 -- Dada una lista de funciones, una lista de elementos y un instancia de FList
 -- Aplica las funciones a la lista de elementos utilizando la instancia de FList
 aplicar :: (MonadState m, MonadError m) => [Funcs] -> ListElements -> Type -> Bool -> m (ListElements, Type)
-aplicar fs xs DEFAULT bool = do l <- aplicar' @TList fs xs  bool
+aplicar fs xs DEFAULT bool = do l <- aplicar' @S.Seq fs xs  bool
                                 return (quote l, DEFAULT)
 aplicar fs xs T1 bool = do l <- aplicar' @TList fs xs bool
                            return (quote l, T1)
@@ -93,6 +95,7 @@ evalExp (Term fs exp) bool = do l <- evalExp exp bool
 -- Utilizamos esta funcion para remplazar las funciones definidas
 evalFunc :: (MonadState m, MonadError m) => [Funcs] -> m [Funcs]
 evalFunc [] = return []
+evalFunc ((Zero _):(Delete _):fns) = return fns
 evalFunc ((Defined ss):fns) = do fs <- look4func ss
                                  evalFunc (fs ++ fns)
 evalFunc ((Rep fs):fns) = do fns' <- evalFunc fns

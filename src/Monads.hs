@@ -31,7 +31,7 @@ emptyEnvFuncs = M.empty
 emptyEnvVars :: EnvVars
 emptyEnvVars = M.empty
 
-newtype StateError x = StateError {runStateError :: EnvFuncs -> EnvVars -> Either Error (x, EnvFuncs, EnvVars)}
+newtype StateError x = StateError { runStateError :: EnvFuncs -> EnvVars -> Either Error (x, EnvFuncs, EnvVars) }
 
 instance Functor StateError where
   fmap = liftM
