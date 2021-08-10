@@ -23,7 +23,6 @@ import Data.Map.Strict as M hiding (map)
   '<'           { TTypeOpen }
   '>'           { TTypeClose }
   NUM           { TNum $$ }
-  GENERIC       { TGeneric }
   ZERO_LEFT     { TZeroLeft }
   ZERO_right    { TZeroright }
   SUCC_LEFT     { TSuccLeft }
@@ -63,8 +62,7 @@ funcSeq     : func                             { [$1] }
 
 
 valor       :: { Elements }
-valor       : NUM                              { Num $1 }
-            | GENERIC                          { Generic }
+valor       : NUM                              { $1 }
 
 lista       :: { [Elements] }
 lista       : {- empty -}                      { [] }
@@ -95,7 +93,6 @@ data Token = TEquals
            | TTypeOpen
            | TTypeClose
            | TNum Int
-           | TGeneric
            | TCons
            | TNil
            | TZeroLeft
@@ -165,11 +162,9 @@ lexer4list (',':cs) = TComma : lexer4list cs
 lexer4list ('-':c:cs) | isDigit c = let (nums, rest) = span (isDigit) (c:cs)
                                     in TNum (-(read nums)) : lexer4list rest
                       | isSpace c = lexer4list cs
-                      | isAlpha c = TGeneric : lexer4list cs
 lexer4list (c:cs) | isDigit c = let (nums, rest) = span (isDigit) (c:cs)
                                 in TNum (read nums) : lexer4list rest
                   | isSpace c = lexer4list cs
-                  | isAlpha c = TGeneric : lexer4list cs
 
 parser :: String  -> [Comms]
 parser = func . lexer

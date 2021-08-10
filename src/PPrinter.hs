@@ -4,7 +4,7 @@ import Data.List
 import Data.Maybe
 import Data.Map.Strict as M hiding (splitAt, delete, foldr, map)
 
-pp :: Either Error TypedList -> String
+pp :: Either Error (Maybe TypedList) -> String
 pp (Right (Just (l, t))) = show l ++ " <" ++ ppType t ++ ">"
 pp (Right Nothing) = "ok."
 pp (Left err) = ppError err
@@ -55,7 +55,7 @@ lookupKey val = M.foldrWithKey cmp []
                             else found
 
 ppType :: Type -> String
-ppType DEFAULT = "TList"
+ppType DEFAULT = "Seq"
 ppType t = head $ lookupKey t mapType
 
 ppError :: Error -> String

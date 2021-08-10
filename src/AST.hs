@@ -14,26 +14,24 @@ data Exp = List (ListElements, Type) -- Lista con su tipo
          | Term [Funcs] Exp -- Aplicacion de una lista de funciones a una expresion
          deriving (Show, Eq)
 
--- Representacion de los elementos en una lista
--- Num i : Numero
--- Generic: Elemento generico. Nos permite definir una cantidad infinita de elementos dentro de una lista
-data Elements = Num Int | Generic deriving Eq
+-- Elementos de las listas
+type Elements = Int
+
 -- Lista de elementos
 type ListElements = [Elements]
 
 -- "Tipos de estructuras" que hacen referencia a las instancias de FList
 -- DEFAULT : Tipo default, lo utilizamos cuando no especificamos el tipo
 -- INVALID ss : Tipo invalido, lo utilizamos para devolver un error
-data Type = DEFAULT | INVALID String | T1 | T2 | T3 | T4 | T5
+data Type = DEFAULT | INVALID String | T1 | T2 | T3 | T4
             deriving (Show, Eq)
 
 -- Mapa de los tipos de estructuras
 mapType :: M.Map String Type
-mapType = M.fromList [("TList", T1), ("List", T2), ("CList", T3), ("Tree", T4), ("Seq", T5)]
+mapType = M.fromList [("TList", T1), ("List", T2), ("CList", T3), ("Seq", T4)]
 
 -- Lista de elementos con su tipo
--- Utilizamos Maybe para poder devolver Nothing en el caso de crear una variable o definir una funcion
-type TypedList = Maybe (ListElements, Type)
+type TypedList = (ListElements, Type)
 
 -- Especificamos los extremos de la lista para aplicar las funciones
 data Orientation = L | R deriving (Show, Eq)
@@ -44,10 +42,6 @@ data Funcs = Zero Orientation -- Agregamos un 0 en un extremo dado
            | Rep [Funcs] -- Repetimos las funciones de la lista
            | Defined String -- Funciones definidas en el enviroment
            deriving (Show, Eq)
-
-instance Show Elements where
-  show (Num v) = show v
-  show Generic = show "X"
 
 -- Enviroment de funciones
 type EnvFuncs = M.Map String [Funcs]

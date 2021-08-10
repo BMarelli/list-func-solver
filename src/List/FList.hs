@@ -1,5 +1,9 @@
 module List.FList where
+
 import AST
+
+-- class Monad m => FList m l where
+-- monadizar esto
 
 class FList l where
   lengthFL :: l a -> Int
@@ -11,4 +15,3 @@ class FList l where
   succesor :: Orientation -> l Elements -> Either Error (l Elements)
   delete :: Orientation -> l Elements -> Either Error (l Elements)
   rep :: [Funcs] -> l Elements -> Either Error (l Elements)
-

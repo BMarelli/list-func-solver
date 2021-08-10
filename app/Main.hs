@@ -92,6 +92,7 @@ fileEvals file f l = do lns <- fileManagement file
                                              (_, f', l') = eval rest f l False
                                          return (f', l')
 
+-- Cambiar esto (comando propio)
 printAST :: EnvFuncs -> EnvVars -> String -> InputT IO ()
 printAST f v cs = do let (_, exp) = break isSpace cs
                      case exp of

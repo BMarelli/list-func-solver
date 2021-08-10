@@ -1,7 +1,8 @@
 module List.ArrFList where
-import List.FList
+
 import AST
 import qualified Data.Vector as V
+import List.FList
 import Prelude hiding (length)
 
 nth :: V.Vector a -> Int -> a
@@ -13,11 +14,11 @@ instance FList V.Vector where
   fromList = V.fromList
 
   quote arr = case lengthFL arr of
-                    0 -> []
-                    1 -> [nth arr 0]
-                    _ -> nth arr 0 : quote (V.tail arr)
+    0 -> []
+    1 -> [nth arr 0]
+    _ -> nth arr 0 : quote (V.tail arr)
 
-  zero = undefined 
-  delete = undefined 
+  zero = undefined
+  delete = undefined
   succesor = undefined
   rep = undefined
