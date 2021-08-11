@@ -2,13 +2,11 @@
      style="float: left; margin-right: 10px;" />
 
 
-<center><font size="8">Análisis de Lenguajes de Programación</font></center>
+<h1 align="center">Análisis de Lenguajes de Programación</h1>
 
+<h1 align="center">Trabajo Práctico Final: <i>list-func-solver</h1>
 
-<center><font size="6">Trabajo Práctico Final: <i>list-func-solver</i></font></center>
-
-
-<center><font size="5"><i>Bautista Marelli, M-6682/6</i></font></center>
+<h1 align="center">Bautista Marelli, M-6682/6</h1>
 
 
 ---
