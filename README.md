@@ -1,9 +1,12 @@
 <img src="img/Logo-UNR.png"
      style="float: left; margin-right: 10px;" />
 
+
 <center><font size="8">Análisis de Lenguajes de Programación</font></center>
 
+
 <center><font size="6">Trabajo Práctico Final: <i>list-func-solver</i></font></center>
+
 
 <center><font size="5"><i>Bautista Marelli, M-6682/6</i></font></center>
 
