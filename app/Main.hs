@@ -89,7 +89,7 @@ fileEvals file f l = do lns <- fileManagement file
                                          putLn $ "Se abrio el archivo "++ file ++ " correctamente!."
                                          liftIO $ setSGR [Reset]
                                          let rest = parser lns
-                                             (_, f', l') = eval rest f l False
+                                             (_, f', l') = eval rest f l
                                          return (f', l')
 
 -- Cambiar esto (comando propio)
@@ -98,7 +98,7 @@ printAST f v cs = do let (_, exp) = break isSpace cs
                      case exp of
                        [] -> outputStrLn "Tiene que ser \":p <exp>\""
                        _ -> do let exp' = parser (drop 3 cs)
-                               case eval exp' f v True of
+                               case eval exp' f v of
                                  (Left err, f', v') -> do liftIO $ setSGR [SetColor Foreground Vivid Red]
                                                           putLn (pp (Left err))
                                                           liftIO $ setSGR [Reset]
@@ -124,7 +124,7 @@ repl f v = do input <- getInputLine"FL> "
                                                repl f' v'
                                 Reload -> repl emptyEnvFuncs emptyEnvVars 
                                 Solve cs -> let exp = parser cs
-                                            in case eval exp f v False of
+                                            in case eval exp f v of
                                                 (Left err, f', v') -> do liftIO $ setSGR [SetColor Foreground Vivid Red]
                                                                          putLn (pp (Left err))
                                                                          liftIO $ setSGR [Reset]

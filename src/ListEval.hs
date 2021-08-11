@@ -1,10 +1,8 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeApplications, ScopedTypeVariables #-}
 
-
-
 module ListEval where
-import Debug.Trace
+-- import Debug.Trace
 import AST
 import Data.Map.Strict as M hiding (splitAt, delete, map)
 import Data.Maybe
@@ -27,12 +25,8 @@ changeType (Term fns exp) t = Term fns (changeType exp t)
 
 -- ======================================== Mejora Rendimiento =========================================================
 -- Aplicamos las funciones a lista de elementos como la instancia de FList que recibimos.
--- En el caso de que bool sea True, utilizamos traceM para printear el resultado de aplicar las funciones a la lista
-aplicar' :: forall l m . (FList l, MonadState m, MonadError m) => [Funcs] -> ListElements -> Bool -> m (l Elements)
-aplicar' fs l bool | bool      = do l' <- aplicar_ fs (List.FList.fromList l)
-                                    traceM (printFL l')
-                                    return l'
-                   | otherwise = aplicar_ fs (List.FList.fromList l)
+aplicar' :: forall l m . (FList l, MonadState m, MonadError m) => [Funcs] -> ListElements -> m (l Elements)
+aplicar' fs l = aplicar_ fs (List.FList.fromList l)
     where
       aplicar_ :: forall l m . (FList l, MonadState m, MonadError m) => [Funcs] -> l Elements -> m (l Elements)
       aplicar_ [] l = return l
@@ -56,39 +50,39 @@ aplicar' fs l bool | bool      = do l' <- aplicar_ fs (List.FList.fromList l)
 
 -- Dada una lista de funciones, una lista de elementos y un instancia de FList
 -- Aplica las funciones a la lista de elementos utilizando la instancia de FList
-aplicar :: (MonadState m, MonadError m) => [Funcs] -> ListElements -> Type -> Bool -> m (ListElements, Type)
-aplicar fs xs DEFAULT bool = do l <- aplicar' @S.Seq fs xs  bool
-                                return (quote l, DEFAULT)
-aplicar fs xs T1 bool = do l <- aplicar' @TList fs xs bool
-                           return (quote l, T1)
-aplicar fs xs T2 bool = do l <- aplicar' @[] fs xs bool
-                           return (quote l, T2)
-aplicar fs xs T3 bool = do l <- aplicar' @CList fs xs bool
-                           return (quote l, T3)
-aplicar fs xs T4 bool = do l <- aplicar' @S.Seq fs xs bool
-                           return (quote l, T4)
--- aplicar fs xs T5 bool = do l <- aplicar' @S.Seq fs xs bool
---                            return (quote l, T5)
-aplicar _ _ (INVALID ss) bool = throw (InvalidType ss)
+aplicar :: (MonadState m, MonadError m) => [Funcs] -> ListElements -> Type -> m (ListElements, Type)
+aplicar fs xs DEFAULT = do l <- aplicar' @S.Seq fs xs
+                           return (quote l, DEFAULT)
+aplicar fs xs T1 = do l <- aplicar' @TList fs xs
+                      return (quote l, T1)
+aplicar fs xs T2 = do l <- aplicar' @[] fs xs
+                      return (quote l, T2)
+aplicar fs xs T3 = do l <- aplicar' @CList fs xs
+                      return (quote l, T3)
+aplicar fs xs T4 = do l <- aplicar' @S.Seq fs xs
+                      return (quote l, T4)
+-- aplicar fs xs T5 = do l <- aplicar' @S.Seq fs xs
+--                       return (quote l, T5)
+aplicar _ _ (INVALID ss) = throw (InvalidType ss)
 
 -- Evalua una expresion y devuelve una TypedList como resultado
 -- En el caso que se produzca un error, lo devolvemos
-evalExp :: (MonadState m, MonadError m) => Exp -> Bool -> m (Maybe TypedList)
-evalExp (List (xs, t)) bool = case t of
+evalExp :: (MonadState m, MonadError m) => Exp -> m (Maybe TypedList)
+evalExp (List (xs, t)) = case t of
                               INVALID ss -> throw (InvalidType ss)
                               _ -> return $ Just (xs, t)
-evalExp (Var (var, t)) bool = case t of
+evalExp (Var (var, t)) = case t of
                               INVALID ss -> throw (InvalidType ss)
                               DEFAULT -> do exp <- look4var var
-                                            evalExp exp bool
+                                            evalExp exp
                               _ -> do exp <- look4var var
-                                      evalExp (changeType exp t) bool
+                                      evalExp (changeType exp t)
 
-evalExp (Term fs exp) bool = do l <- evalExp exp bool
-                                fns <- evalFunc fs
-                                -- res <- uncurry (aplicar fns) (fromJust l)
-                                res <- uncurry (aplicar fns) (fromJust l) bool
-                                return $ Just res
+evalExp (Term fs exp) = do l <- evalExp exp
+                           fns <- evalFunc fs
+                           -- res <- uncurry (aplicar fns) (fromJust l)
+                           res <- uncurry (aplicar fns) (fromJust l)
+                           return $ Just res
 -- =====================================================================================================================
 
 -- Evalua una lista de funciones y devuelve una lista de funciones canonicas
@@ -123,30 +117,27 @@ inferExp (Term ((Defined ss):fs) exp) n i = do f <- look4func ss
                                                inferExp (Term (f++fs) exp) n i
 
 -- Evalua los distintos comandos y devuelve una TypedList como resultado
-evalComms :: (MonadState m, MonadError m) => Comms -> Bool -> m (Maybe TypedList)
-evalComms (Eval exp) bool = do evalExp exp bool
-evalComms (Def ss fs) bool = do fns <- evalFunc fs
-                                updateFunc ss fs
-                                return Nothing
-evalComms (Const ss exp) bool = do l <- evalExp exp bool
-                                   updateVar ss (List (fromJust l))
-                                   return Nothing
-evalComms (Infer exp n) bool = inferExp exp n 0 >> return Nothing
+evalComms :: (MonadState m, MonadError m) => Comms -> m (Maybe TypedList)
+evalComms (Eval exp) = do evalExp exp
+evalComms (Def ss fs) = do fns <- evalFunc fs
+                           updateFunc ss fs
+                           return Nothing
+evalComms (Const ss exp) = do l <- evalExp exp
+                              updateVar ss (List (fromJust l))
+                              return Nothing
+evalComms (Infer exp n) = inferExp exp n 0 >> return Nothing
 
 -- Evalua un comando con los enviroments dados
-eval' :: Comms -> EnvFuncs -> EnvVars -> Bool -> Either Error (Maybe TypedList, EnvFuncs, EnvVars)
-eval' comm f v bool = runStateError (evalComms comm bool) f v
+eval' :: Comms -> EnvFuncs -> EnvVars -> Either Error (Maybe TypedList, EnvFuncs, EnvVars)
+eval' comm f v = runStateError (evalComms comm) f v
 
 -- [Comms]: Lista de comandos
 -- EnvFuncs: enviroment de funciones
 -- EnvVars: enviroment de variables
--- Bool: bandera que pasamos para al momento de hacer el print del AST. Lo utilizamos para printear la lista como una
---       FList
-eval :: [Comms] -> EnvFuncs -> EnvVars -> Bool -> (Either Error (Maybe TypedList), EnvFuncs, EnvVars)
-eval [x] f v bool = case eval' x f v bool of
+eval :: [Comms] -> EnvFuncs -> EnvVars -> (Either Error (Maybe TypedList), EnvFuncs, EnvVars)
+eval [x] f v = case eval' x f v of
                   Left err -> (Left err, f, v)
                   Right (res, f', v') -> (Right res, f', v')
-eval (x:xs) f v bool = case eval' x f v bool of
-
-                      Right (_, f', v') -> eval xs f' v' bool
+eval (x:xs) f v = case eval' x f v of
+                      Right (_, f', v') -> eval xs f' v'
                       Left err -> (Left err, f, v)
