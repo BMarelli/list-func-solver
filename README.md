@@ -2,11 +2,11 @@
      style="float: left; margin-right: 10px;" />
 
 
-<h1 align="center">Análisis de Lenguajes de Programación</h1>
+<h1 align="center" class="lg bnone">Análisis de Lenguajes de Programación</h1>
 
-<h1 align="center">Trabajo Práctico Final: <i>list-func-solver</h1>
+<h1 align="center" class="m bnone">Trabajo Práctico Final: <i>list-func-solver</h1>
 
-<h1 align="center">Bautista Marelli, M-6682/6</h1>
+<h1 align="center" class="sm bnone">Bautista Marelli, M-6682/6</h1>
 
 
 ---
@@ -32,4 +32,20 @@
 
 ## Instalación <a name="5"></a>
 
-## Uso <a name=""></a>
+## Uso <a name="6"></a>
+
+
+<style>
+.lg{
+  font-size: 46px;
+}
+.m {
+  font-size: 40px;
+}
+.sm {
+  font-size: 34px;
+}
+.bnone {
+  border-bottom: none;
+}
+</style>
