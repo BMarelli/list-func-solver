@@ -3,6 +3,7 @@ import AST
 import Data.List
 import Data.Maybe
 import Data.Map.Strict as M hiding (splitAt, delete, foldr, map)
+import List.FList
 
 pp :: Either Error (Maybe TypedList) -> String
 pp (Right (Just (l, t))) = show l ++ " <" ++ ppType t ++ ">"

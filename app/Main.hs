@@ -103,6 +103,7 @@ printAST f v cs = do let (_, exp) = break isSpace cs
                                                           putLn (pp (Left err))
                                                           liftIO $ setSGR [Reset]
                                  (Right res, f', v') -> do liftIO $ setSGR [SetColor Foreground Vivid Green]
+                                                          --  liftIO $ print (pp (Right res))
                                                            putLn (ppc exp')
                                                            liftIO $ setSGR [Reset]
 
@@ -117,27 +118,27 @@ repl f v = do input <- getInputLine"FL> "
                 Just "" -> repl f v
                 Just c -> do cmm <- commandsEvaluation c
                              case cmm of
-                                Exit -> return ()
-                                None -> repl f v
-                                Print -> printAST f v c >> repl f v
-                                Clear cs -> do (f', v') <- clearFromEnviroment cs f v
-                                               repl f' v'
-                                Reload -> repl emptyEnvFuncs emptyEnvVars 
-                                Solve cs -> let exp = parser cs
-                                            in case eval exp f v of
-                                                (Left err, f', v') -> do liftIO $ setSGR [SetColor Foreground Vivid Red]
-                                                                         putLn (pp (Left err))
-                                                                         liftIO $ setSGR [Reset]
-                                                                         repl f' v'
-                                                (Right res, f', v') -> do liftIO $ setSGR [SetColor Foreground Vivid Green]
-                                                                          putLn (pp (Right res))
-                                                                          liftIO $ setSGR [Reset]
-                                                                          repl f' v'
-                                Display -> outputStrLn (ppEnv f v) >> repl f v
-                                Help -> outputStrLn printHelp >> repl f v
-                                LoadFile (Just file) -> do (f', v') <- fileEvals file f v
-                                                           repl f' v'
-                                _ -> outputStrLn "hola" >> repl f v
+                              Exit -> return ()
+                              None -> repl f v
+                              Print -> printAST f v c >> repl f v
+                              Clear cs -> do (f', v') <- clearFromEnviroment cs f v
+                                             repl f' v'
+                              Reload -> repl emptyEnvFuncs emptyEnvVars 
+                              Solve cs -> let exp = parser cs
+                                          in case eval exp f v of
+                                              (Left err, f', v') -> do liftIO $ setSGR [SetColor Foreground Vivid Red]
+                                                                       putLn (pp (Left err))
+                                                                       liftIO $ setSGR [Reset]
+                                                                       repl f' v'
+                                              (Right res, f', v') -> do liftIO $ setSGR [SetColor Foreground Vivid Green]
+                                                                        putLn (pp (Right res))
+                                                                        liftIO $ setSGR [Reset]
+                                                                        repl f' v'
+                              Display -> outputStrLn (ppEnv f v) >> repl f v
+                              Help -> outputStrLn printHelp >> repl f v
+                              LoadFile (Just file) -> do (f', v') <- fileEvals file f v
+                                                         repl f' v'
+                              _ -> outputStrLn "hola" >> repl f v
 
 main :: IO ()
 main = do putStrLn "Evaluador de Funciones de Listas."

@@ -60,14 +60,10 @@ funcSeq     : func                             { [$1] }
             | func '.' funcSeq                 { $1 : $3 }
             | func funcSeq                     { $1 : $2 }
 
-
-valor       :: { Elements }
-valor       : NUM                              { $1 }
-
 lista       :: { [Elements] }
 lista       : {- empty -}                      { [] }
-            | valor                            { [$1] }
-            | valor ',' lista                  { $1 : $3 }
+            | NUM                              { [$1] }
+            | NUM ',' lista                    { $1 : $3 }
 
 func        :: { Funcs }
 func        : ZERO_LEFT                        { Zero L }

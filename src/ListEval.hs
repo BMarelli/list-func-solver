@@ -61,8 +61,6 @@ aplicar fs xs T3 = do l <- aplicar' @CList fs xs
                       return (quote l, T3)
 aplicar fs xs T4 = do l <- aplicar' @S.Seq fs xs
                       return (quote l, T4)
--- aplicar fs xs T5 = do l <- aplicar' @S.Seq fs xs
---                       return (quote l, T5)
 aplicar _ _ (INVALID ss) = throw (InvalidType ss)
 
 -- Evalua una expresion y devuelve una TypedList como resultado
@@ -80,7 +78,6 @@ evalExp (Var (var, t)) = case t of
 
 evalExp (Term fs exp) = do l <- evalExp exp
                            fns <- evalFunc fs
-                           -- res <- uncurry (aplicar fns) (fromJust l)
                            res <- uncurry (aplicar fns) (fromJust l)
                            return $ Just res
 -- =====================================================================================================================
