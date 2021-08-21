@@ -22,6 +22,9 @@ import Data.Map.Strict as M hiding (map)
   '}'           { TRClose }
   '<'           { TTypeOpen }
   '>'           { TTypeClose }
+  '^'           { TPower }
+  '('           { TOpen2 }
+  ')'           { TClose2 }
   NUM           { TNum $$ }
   ZERO_LEFT     { TZeroLeft }
   ZERO_right    { TZeroright }
@@ -73,6 +76,7 @@ func        : ZERO_LEFT                        { Zero L }
             | DELETE_LEFT                      { Delete L }
             | DELETE_right                     { Delete R }
             | '{' funcSeq '}'                  { Rep $2 }
+            | '(' funcSeq ')' '^' NUM          { Power $2 $5 }
             | VAR                              { Defined $1 }
 
 {
@@ -88,6 +92,9 @@ data Token = TEquals
            | TRClose
            | TTypeOpen
            | TTypeClose
+           | TPower
+           | TOpen2
+           | TClose2
            | TNum Int
            | TCons
            | TNil
@@ -125,6 +132,9 @@ lexer ('{':cs) = TROpen : lexer cs
 lexer ('}':cs) = TRClose : lexer cs
 lexer ('<':cs) = TTypeOpen : lexer cs
 lexer ('>':cs) = TTypeClose : lexer cs
+lexer ('(':cs) = TOpen2 : lexer cs
+lexer (')':cs) = TClose2 : lexer cs
+lexer ('^':cs) = TPower : lexer cs
 
 lexer4num :: String -> [Token]
 lexer4num cs = let (nums, rest) = span (isDigit) cs

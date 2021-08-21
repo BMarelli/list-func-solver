@@ -47,6 +47,9 @@ aplicar' fs l = aplicar_ fs (List.FList.fromList l)
                                   -- Right l' -> traceM ("rep " ++ " -> " ++ printFL l') >> aplicar_ fs l'
       aplicar_ ((Defined ss):fs) l = do fns <- look4func ss
                                         aplicar_ (fns ++ fs) l
+      aplicar_ ((Power fns 0):fs) l = aplicar_ fs l
+      aplicar_ ((Power fns n):fs) l = do l' <- aplicar_ fns l
+                                         aplicar_ ((Power fns (n-1)):fs) l'
 
 -- Dada una lista de funciones, una lista de elementos y un instancia de FList
 -- Aplica las funciones a la lista de elementos utilizando la instancia de FList
@@ -93,6 +96,9 @@ evalFunc ((Defined ss):fns) = do fs <- look4func ss
 evalFunc ((Rep fs):fns) = do fns' <- evalFunc fns
                              fs' <- evalFunc fs
                              return $ (Rep fs'):fns'
+evalFunc ((Power fs n):fns) = do fns' <- evalFunc fns
+                                 fs' <- evalFunc fs
+                                 return $ (Power fs' n):fns'
 evalFunc (f:fns) = do fns' <- evalFunc fns
                       return $ f:fns'
 
@@ -112,6 +118,8 @@ inferExp (Term ((Delete _):fs) exp) n i = inferExp (Term fs exp) n (i-1)
 inferExp (Term ((Rep fns):fs) exp) n _ = throw InferRep
 inferExp (Term ((Defined ss):fs) exp) n i = do f <- look4func ss
                                                inferExp (Term (f++fs) exp) n i
+inferExp (Term ((Power fns 0):fs) exp) n i = inferExp (Term fs exp) n i
+inferExp (Term ((Power fns k):fs) exp) n i = throw InferPower
 
 -- Evalua los distintos comandos y devuelve una TypedList como resultado
 evalComms :: (MonadState m, MonadError m) => Comms -> m (Maybe TypedList)

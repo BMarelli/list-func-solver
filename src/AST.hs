@@ -41,6 +41,7 @@ data Funcs = Zero Orientation -- Agregamos un 0 en un extremo dado
            | Delete Orientation -- Eliminamos al elemento de un extremo dado
            | Rep [Funcs] -- Repetimos las funciones de la lista
            | Defined String -- Funciones definidas en el enviroment
+           | Power [Funcs] Int
            deriving (Show, Eq)
 
 -- Enviroment de funciones
@@ -55,5 +56,6 @@ data Error = UndefinedFunc String -- Funcion no definida
            | InvalidAplication -- Aplicacion invalida de una funcion
            | InvalidInfer Int Int -- Inferencia invalida (Valor real) (Valor propuesto)
            | InferRep -- Inferencia invalida de la funcion repetir
+           | InferPower
            | InvalidType String -- Tipo de estructura no definida
            deriving (Show, Eq)
