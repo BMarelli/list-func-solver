@@ -2,7 +2,7 @@
 {-# LANGUAGE TypeApplications, ScopedTypeVariables #-}
 
 module ListEval where
--- import Debug.Trace
+import Debug.Trace
 import AST
 import Data.Map.Strict as M hiding (splitAt, delete, map)
 import Data.Maybe
@@ -119,7 +119,8 @@ inferExp (Term ((Rep fns):fs) exp) n _ = throw InferRep
 inferExp (Term ((Defined ss):fs) exp) n i = do f <- look4func ss
                                                inferExp (Term (f++fs) exp) n i
 inferExp (Term ((Power fns 0):fs) exp) n i = inferExp (Term fs exp) n i
-inferExp (Term ((Power fns k):fs) exp) n i = throw InferPower
+inferExp (Term ((Power fns k):fs) exp) n i = throw InferPower 
+
 
 -- Evalua los distintos comandos y devuelve una TypedList como resultado
 evalComms :: (MonadState m, MonadError m) => Comms -> m (Maybe TypedList)
