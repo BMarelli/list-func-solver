@@ -1,3 +1,17 @@
 def cero = zero_left;
 
-def 
+def sucesor = double_left succ_left;
+
+def p1 = double_left;
+
+def p2 = (move_right)^1 double_left (swap move_left)^1;
+
+def p3 = (move_right)^2 double_left (swap move_left)^2;
+
+def suma_g = p1;
+
+def suma_h = p1 succ_left;
+
+def suma =  move_right suma_g zero_left
+            { move_right swap move_left suma_h move_right delete_left succ_left swap move_left }
+            delete_left swap move_left;

@@ -141,7 +141,7 @@ lexer4num cs = let (nums, rest) = span (isDigit) cs
                in TNum (read nums) : lexer rest
 
 lexer4var :: String -> [Token]
-lexer4var cs = case span (\c -> isAlpha c || c == '_') cs of
+lexer4var cs = case span (\c -> isAlpha c || c == '_' || isDigit c) cs of
                 ("zero_left", rest) -> TZeroLeft : lexer rest
                 ("z_l", rest) -> TZeroLeft : lexer rest
                 ("zero_right", rest) -> TZeroright : lexer rest

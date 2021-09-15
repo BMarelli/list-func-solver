@@ -37,6 +37,7 @@ func2string (Succ L) = "succ_left"
 func2string (Succ R) = "succ_right"
 func2string (Rep fs) = "{" ++ unwords (map func2string fs) ++ "}"
 func2string (Defined ss) = ss
+func2string (Power fs n) = "(" ++ unwords (map func2string fs) ++ ")^" ++ show n
 
 ppVars :: [(String, Exp)] -> [String]
 ppVars [] = ["empty"]
