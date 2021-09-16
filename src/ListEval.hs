@@ -47,9 +47,9 @@ aplicar' fs l = aplicar_ fs (List.FList.fromList l)
                                   -- Right l' -> traceM ("rep " ++ " -> " ++ printFL l') >> aplicar_ fs l'
       aplicar_ ((Defined ss):fs) l = do fns <- look4func ss
                                         aplicar_ (fns ++ fs) l
-      aplicar_ ((Power fns 0):fs) l = aplicar_ fs l
-      aplicar_ ((Power fns n):fs) l = do l' <- aplicar_ fns l
-                                         aplicar_ ((Power fns (n-1)):fs) l'
+      -- aplicar_ ((Power fns 0):fs) l = aplicar_ fs l
+      -- aplicar_ ((Power fns n):fs) l = do l' <- aplicar_ fns l
+      --                                    aplicar_ ((Power fns (n-1)):fs) l'
 
 -- Dada una lista de funciones, una lista de elementos y un instancia de FList
 -- Aplica las funciones a la lista de elementos utilizando la instancia de FList
@@ -96,9 +96,9 @@ evalFunc ((Defined ss):fns) = do fs <- look4func ss
 evalFunc ((Rep fs):fns) = do fns' <- evalFunc fns
                              fs' <- evalFunc fs
                              return $ (Rep fs'):fns'
-evalFunc ((Power fs n):fns) = do fns' <- evalFunc fns
-                                 fs' <- evalFunc fs
-                                 return $ (Power fs' n):fns'
+-- evalFunc ((Power fs n):fns) = do fns' <- evalFunc fns
+--                                  fs' <- evalFunc fs
+--                                  return $ (Power fs' n):fns'
 evalFunc (f:fns) = do fns' <- evalFunc fns
                       return $ f:fns'
 
@@ -118,8 +118,8 @@ inferExp (Term ((Delete _):fs) exp) n i = inferExp (Term fs exp) n (i-1)
 inferExp (Term ((Rep fns):fs) exp) n _ = throw InferRep
 inferExp (Term ((Defined ss):fs) exp) n i = do f <- look4func ss
                                                inferExp (Term (f++fs) exp) n i
-inferExp (Term ((Power fns 0):fs) exp) n i = inferExp (Term fs exp) n i
-inferExp (Term ((Power fns k):fs) exp) n i = throw InferPower 
+-- inferExp (Term ((Power fns 0):fs) exp) n i = inferExp (Term fs exp) n i
+-- inferExp (Term ((Power fns k):fs) exp) n i = throw InferPower 
 
 
 -- Evalua los distintos comandos y devuelve una TypedList como resultado
@@ -147,3 +147,29 @@ eval [x] f v = case eval' x f v of
 eval (x:xs) f v = case eval' x f v of
                       Right (_, f', v') -> eval xs f' v'
                       Left err -> (Left err, f, v)
+
+desugarComms :: SComms -> Comms
+desugarComms (SDef ss sfs) = Def ss (desugarFuncs sfs)
+desugarComms (SConst ss sexp) = Const ss (desugarExp sexp)
+desugarComms (SEval sexp) = Eval (desugarExp sexp)
+desugarComms (SInfer sexp n) = Infer (desugarExp sexp) n
+
+desugarFuncs :: [SFuncs] -> [Funcs]
+desugarFuncs fs = join $ map f fs
+    where
+      f (SZero or) = [Zero or]
+      f (SSucc or) = [Succ or]
+      f (SDelete or) = [Delete or]
+      f (SRep sfns) = [Rep (desugarFuncs sfns)]
+      f (SDefined ss) = [Defined ss]
+      f (SPower sfns n) = let fns = desugarFuncs sfns
+                          in copyN fns n
+      copyN xs 0 = []
+      copyN xs n = xs ++ (copyN xs (n-1))
+desugarExp :: SExp -> Exp
+desugarExp (SList (l, t)) = List (l, t)
+desugarExp (SVar (ss, t)) = Var (ss, t)
+desugarExp (STerm sfns sexp) = Term (desugarFuncs sfns) (desugarExp sexp)
+
+elab :: [SComms] -> EnvFuncs -> EnvVars -> (Either Error (Maybe TypedList), EnvFuncs, EnvVars)
+elab xs f v = eval (map desugarComms xs) f v

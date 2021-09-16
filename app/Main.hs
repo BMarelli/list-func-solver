@@ -89,7 +89,7 @@ fileEvals file f l = do lns <- fileManagement file
                                          putLn $ "Se abrio el archivo "++ file ++ " correctamente!."
                                          liftIO $ setSGR [Reset]
                                          let rest = parser lns
-                                             (_, f', l') = eval rest f l
+                                             (_, f', l') = elab rest f l
                                          return (f', l')
 
 -- Cambiar esto (comando propio)
@@ -98,13 +98,13 @@ printAST f v cs = do let (_, exp) = break isSpace cs
                      case exp of
                        [] -> outputStrLn "Tiene que ser \":p <exp>\""
                        _ -> do let exp' = parser (drop 3 cs)
-                               case eval exp' f v of
+                               case elab exp' f v of
                                  (Left err, f', v') -> do liftIO $ setSGR [SetColor Foreground Vivid Red]
                                                           putLn (pp (Left err))
                                                           liftIO $ setSGR [Reset]
                                  (Right res, f', v') -> do liftIO $ setSGR [SetColor Foreground Vivid Green]
                                                           --  liftIO $ print (pp (Right res))
-                                                           putLn (ppc exp')
+                                                           putLn (ppc (map desugarComms exp'))
                                                            liftIO $ setSGR [Reset]
 
 clearFromEnviroment :: String -> EnvFuncs -> EnvVars -> InputT IO (EnvFuncs, EnvVars)
@@ -125,7 +125,7 @@ repl f v = do input <- getInputLine"FL> "
                                              repl f' v'
                               Reload -> repl emptyEnvFuncs emptyEnvVars 
                               Solve cs -> let exp = parser cs
-                                          in case eval exp f v of
+                                          in case elab exp f v of
                                               (Left err, f', v') -> do liftIO $ setSGR [SetColor Foreground Vivid Red]
                                                                        putLn (pp (Left err))
                                                                        liftIO $ setSGR [Reset]

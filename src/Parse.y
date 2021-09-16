@@ -38,27 +38,27 @@ import Data.Map.Strict as M hiding (map)
   CONST         { TConst }
 
 %%
-commsSeq    :: { [Comms] }
+commsSeq    :: { [SComms] }
 commsSeq    : comms                            { [$1] }
             | comms commsSeq                   { $1 : $2}
 
-comms       :: { Comms }
-comms       : DEF VAR '=' funcSeq ';'          { Def $2 $4 }
-            | CONST VAR '=' exp ';'            { Const $2 $4 }
-            | exp '::' NUM ';'                 { Infer $1 $3 }
-            | exp ';'                          { Eval $1 }
+comms       :: { SComms }
+comms       : DEF VAR '=' funcSeq ';'          { SDef $2 $4 }
+            | CONST VAR '=' exp ';'            { SConst $2 $4 }
+            | exp '::' NUM ';'                 { SInfer $1 $3 }
+            | exp ';'                          { SEval $1 }
 
-exp         :: { Exp }
-exp         : funcSeq ':' atoms                { Term $1 $3 }
+exp         :: { SExp }
+exp         : funcSeq ':' atoms                { STerm $1 $3 }
             | atoms                            { $1 }
 
-atoms       :: { Exp }
-atoms       : '[' lista ']'                    { List ($2, DEFAULT) }
-            | VAR                              { Var ($1, DEFAULT) }
-            | '[' lista ']' '<' TYPE '>'       { List ($2, $5) }
-            | VAR '<' TYPE '>'                 { Var ($1, $3) }
+atoms       :: { SExp }
+atoms       : '[' lista ']'                    { SList ($2, DEFAULT) }
+            | VAR                              { SVar ($1, DEFAULT) }
+            | '[' lista ']' '<' TYPE '>'       { SList ($2, $5) }
+            | VAR '<' TYPE '>'                 { SVar ($1, $3) }
 
-funcSeq     :: { [Funcs] }
+funcSeq     :: { [SFuncs] }
 funcSeq     : func                             { [$1] }
             | func '.' funcSeq                 { $1 : $3 }
             | func funcSeq                     { $1 : $2 }
@@ -68,16 +68,16 @@ lista       : {- empty -}                      { [] }
             | NUM                              { [$1] }
             | NUM ',' lista                    { $1 : $3 }
 
-func        :: { Funcs }
-func        : ZERO_LEFT                        { Zero L }
-            | ZERO_right                       { Zero R }
-            | SUCC_LEFT                        { Succ L }
-            | SUCC_right                       { Succ R }
-            | DELETE_LEFT                      { Delete L }
-            | DELETE_right                     { Delete R }
-            | '{' funcSeq '}'                  { Rep $2 }
-            | '(' funcSeq ')' '^' NUM          { Power $2 $5 }
-            | VAR                              { Defined $1 }
+func        :: { SFuncs }
+func        : ZERO_LEFT                        { SZero L }
+            | ZERO_right                       { SZero R }
+            | SUCC_LEFT                        { SSucc L }
+            | SUCC_right                       { SSucc R }
+            | DELETE_LEFT                      { SDelete L }
+            | DELETE_right                     { SDelete R }
+            | '{' funcSeq '}'                  { SRep $2 }
+            | '(' funcSeq ')' '^' NUM          { SPower $2 $5 }
+            | VAR                              { SDefined $1 }
 
 {
 data Token = TEquals
@@ -172,6 +172,6 @@ lexer4list (c:cs) | isDigit c = let (nums, rest) = span (isDigit) (c:cs)
                                 in TNum (read nums) : lexer4list rest
                   | isSpace c = lexer4list cs
 
-parser :: String  -> [Comms]
+parser :: String  -> [SComms]
 parser = func . lexer
 }

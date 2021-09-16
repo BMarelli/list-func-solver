@@ -41,7 +41,6 @@ data Funcs = Zero Orientation -- Agregamos un 0 en un extremo dado
            | Delete Orientation -- Eliminamos al elemento de un extremo dado
            | Rep [Funcs] -- Repetimos las funciones de la lista
            | Defined String -- Funciones definidas en el enviroment
-           | Power [Funcs] Int
            deriving (Show, Eq)
 
 -- Enviroment de funciones
@@ -59,3 +58,27 @@ data Error = UndefinedFunc String -- Funcion no definida
            | InferPower
            | InvalidType String -- Tipo de estructura no definida
            deriving (Show, Eq)
+
+-- ==================================== Asucar Sintactico ====================================
+-- Comandos
+data SComms = SDef String [SFuncs] -- Definir una funcion
+            | SConst String SExp -- Crear una variable
+            | SEval SExp -- Evaluar una expresion
+            | SInfer SExp Int -- Inferir la longitud de la lista resultante de una expresion
+            deriving (Show, Eq)
+
+-- Expresion
+data SExp = SList (ListElements, Type) -- Lista con su tipo
+          | SVar (String, Type) -- Variable con su tipo
+          | STerm [SFuncs] SExp -- Aplicacion de una lista de funciones a una expresion
+          deriving (Show, Eq)
+
+-- Funciones asucaradas
+data SFuncs = SZero Orientation -- Agregamos un 0 en un extremo dado
+            | SSucc Orientation -- Aplicamos sucesor al elemento en un extremo dado
+            | SDelete Orientation -- Eliminamos al elemento de un extremo dado
+            | SRep [SFuncs] -- Repetimos las funciones de la lista
+            | SDefined String -- Funciones definidas en el enviroment
+            | SPower [SFuncs] Int
+            deriving (Show, Eq)
+-- ===========================================================================================
