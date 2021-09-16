@@ -138,7 +138,7 @@ repl f v = do input <- getInputLine"FL> "
                               Help -> outputStrLn printHelp >> repl f v
                               LoadFile (Just file) -> do (f', v') <- fileEvals file f v
                                                          repl f' v'
-                              _ -> outputStrLn "hola" >> repl f v
+                              _ -> repl f v
 
 main :: IO ()
 main = do putStrLn "Evaluador de Funciones de Listas."
