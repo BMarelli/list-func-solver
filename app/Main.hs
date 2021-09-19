@@ -13,7 +13,7 @@ import PPrinter ( pp, ppc, ppEnv )
 import AST
 import Monads
 import List.FList
-import ListEval
+import Elab
 
 type File = Maybe FilePath
 
@@ -99,13 +99,8 @@ printAST f v cs = do let (_, exp) = break isSpace cs
                        [] -> outputStrLn "Tiene que ser \":p <exp>\""
                        _ -> do let exp' = parser (drop 3 cs)
                                case elab exp' f v of
-                                 (Left err, f', v') -> do liftIO $ setSGR [SetColor Foreground Vivid Red]
-                                                          putLn (pp (Left err))
-                                                          liftIO $ setSGR [Reset]
-                                 (Right res, f', v') -> do liftIO $ setSGR [SetColor Foreground Vivid Green]
-                                                          --  liftIO $ print (pp (Right res))
-                                                           putLn (ppc (map desugarComms exp'))
-                                                           liftIO $ setSGR [Reset]
+                                 (Left err, f', v') -> do liftIO $ pp (Left err)
+                                 (Right res, f', v') -> do liftIO $ ppc (map desugarComms exp')
 
 clearFromEnviroment :: String -> EnvFuncs -> EnvVars -> InputT IO (EnvFuncs, EnvVars)
 clearFromEnviroment ss f v = if M.member ss f then return (M.delete ss f, v)
@@ -126,15 +121,11 @@ repl f v = do input <- getInputLine"FL> "
                               Reload -> repl emptyEnvFuncs emptyEnvVars 
                               Solve cs -> let exp = parser cs
                                           in case elab exp f v of
-                                              (Left err, f', v') -> do liftIO $ setSGR [SetColor Foreground Vivid Red]
-                                                                       putLn (pp (Left err))
-                                                                       liftIO $ setSGR [Reset]
+                                              (Left err, f', v') -> do liftIO (pp (Left err))
                                                                        repl f' v'
-                                              (Right res, f', v') -> do liftIO $ setSGR [SetColor Foreground Vivid Green]
-                                                                        putLn (pp (Right res))
-                                                                        liftIO $ setSGR [Reset]
+                                              (Right res, f', v') -> do liftIO (pp (Right res))
                                                                         repl f' v'
-                              Display -> outputStrLn (ppEnv f v) >> repl f v
+                              Display -> liftIO (ppEnv f v) >> repl f v
                               Help -> outputStrLn printHelp >> repl f v
                               LoadFile (Just file) -> do (f', v') <- fileEvals file f v
                                                          repl f' v'

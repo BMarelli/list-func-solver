@@ -59,26 +59,26 @@ data Error = UndefinedFunc String -- Funcion no definida
            | InvalidType String -- Tipo de estructura no definida
            deriving (Show, Eq)
 
--- ==================================== Asucar Sintactico ====================================
+-- ==================================== Azucar Sintactico ====================================
 -- Comandos
-data SComms = SDef String [SFuncs] -- Definir una funcion
-            | SConst String SExp -- Crear una variable
-            | SEval SExp -- Evaluar una expresion
-            | SInfer SExp Int -- Inferir la longitud de la lista resultante de una expresion
+data SComms = SDef String [SFuncs]
+            | SConst String SExp
+            | SEval SExp
+            | SInfer SExp Int
             deriving (Show, Eq)
 
 -- Expresion
-data SExp = SList (ListElements, Type) -- Lista con su tipo
-          | SVar (String, Type) -- Variable con su tipo
-          | STerm [SFuncs] SExp -- Aplicacion de una lista de funciones a una expresion
+data SExp = SList (ListElements, Type)
+          | SVar (String, Type)
+          | STerm [SFuncs] SExp
           deriving (Show, Eq)
 
 -- Funciones asucaradas
-data SFuncs = SZero Orientation -- Agregamos un 0 en un extremo dado
-            | SSucc Orientation -- Aplicamos sucesor al elemento en un extremo dado
-            | SDelete Orientation -- Eliminamos al elemento de un extremo dado
-            | SRep [SFuncs] -- Repetimos las funciones de la lista
-            | SDefined String -- Funciones definidas en el enviroment
+data SFuncs = SZero Orientation
+            | SSucc Orientation
+            | SDelete Orientation
+            | SRep [SFuncs]
+            | SDefined String
             | SPower [SFuncs] Int
             deriving (Show, Eq)
 -- ===========================================================================================

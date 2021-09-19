@@ -26,12 +26,12 @@ source-repository head
 library
   exposed-modules:
       AST
+      Elab
       List.ArrFList
       List.CListFList
       List.FList
       List.ListFList
       List.SeqFList
-      List.TreeFList
       List.TupleFList
       ListEval
       Monads

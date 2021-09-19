@@ -12,7 +12,6 @@ import List.FList
 import List.TupleFList
 import List.ListFList
 import List.CListFList
--- import List.TreeFList
 import List.SeqFList
 import Control.Monad.IO.Class
 import Monads
@@ -147,29 +146,3 @@ eval [x] f v = case eval' x f v of
 eval (x:xs) f v = case eval' x f v of
                       Right (_, f', v') -> eval xs f' v'
                       Left err -> (Left err, f, v)
-
-desugarComms :: SComms -> Comms
-desugarComms (SDef ss sfs) = Def ss (desugarFuncs sfs)
-desugarComms (SConst ss sexp) = Const ss (desugarExp sexp)
-desugarComms (SEval sexp) = Eval (desugarExp sexp)
-desugarComms (SInfer sexp n) = Infer (desugarExp sexp) n
-
-desugarFuncs :: [SFuncs] -> [Funcs]
-desugarFuncs fs = join $ map f fs
-    where
-      f (SZero or) = [Zero or]
-      f (SSucc or) = [Succ or]
-      f (SDelete or) = [Delete or]
-      f (SRep sfns) = [Rep (desugarFuncs sfns)]
-      f (SDefined ss) = [Defined ss]
-      f (SPower sfns n) = let fns = desugarFuncs sfns
-                          in copyN fns n
-      copyN xs 0 = []
-      copyN xs n = xs ++ (copyN xs (n-1))
-desugarExp :: SExp -> Exp
-desugarExp (SList (l, t)) = List (l, t)
-desugarExp (SVar (ss, t)) = Var (ss, t)
-desugarExp (STerm sfns sexp) = Term (desugarFuncs sfns) (desugarExp sexp)
-
-elab :: [SComms] -> EnvFuncs -> EnvVars -> (Either Error (Maybe TypedList), EnvFuncs, EnvVars)
-elab xs f v = eval (map desugarComms xs) f v
