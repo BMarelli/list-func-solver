@@ -3,7 +3,7 @@ import Data.Map.Strict as M
 
 -- Comandos
 data Comms = Def String [Funcs] -- Definir una funcion
-           | Const String Exp -- Crear una variable
+           | Let String Exp -- Crear una variable
            | Eval Exp -- Evaluar una expresion
            | Infer Exp Int -- Inferir la longitud de la lista resultante de una expresion
            deriving (Show, Eq)
@@ -62,7 +62,7 @@ data Error = UndefinedFunc String -- Funcion no definida
 -- ==================================== Azucar Sintactico ====================================
 -- Comandos
 data SComms = SDef String [SFuncs]
-            | SConst String SExp
+            | SLet String SExp
             | SEval SExp
             | SInfer SExp Int
             deriving (Show, Eq)

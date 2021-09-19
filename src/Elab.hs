@@ -5,7 +5,7 @@ import Control.Monad
 
 desugarComms :: SComms -> Comms
 desugarComms (SDef ss sfs) = Def ss (desugarFuncs sfs)
-desugarComms (SConst ss sexp) = Const ss (desugarExp sexp)
+desugarComms (SLet ss sexp) = Let ss (desugarExp sexp)
 desugarComms (SEval sexp) = Eval (desugarExp sexp)
 desugarComms (SInfer sexp n) = Infer (desugarExp sexp) n
 

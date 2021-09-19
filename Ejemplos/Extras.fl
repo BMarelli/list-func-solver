@@ -14,4 +14,4 @@ def agregar_ceros_left = z_l { move_right z_l s_r move_left } d_l;
 -- Chequea si el 0 esta en la lista (0 false, 1 true en la izquierda)
 def check_zero = z_r {swap move_right} d_r z_l s_l;
 
-const empty = [] <TList>;
+let empty = [] <TList>;

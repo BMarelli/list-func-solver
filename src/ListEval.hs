@@ -127,9 +127,9 @@ evalComms (Eval exp) = do evalExp exp
 evalComms (Def ss fs) = do fns <- evalFunc fs
                            updateFunc ss fs
                            return Nothing
-evalComms (Const ss exp) = do l <- evalExp exp
-                              updateVar ss (List (fromJust l))
-                              return Nothing
+evalComms (Let ss exp) = do l <- evalExp exp
+                            updateVar ss (List (fromJust l))
+                            return Nothing
 evalComms (Infer exp n) = inferExp exp n 0 >> return Nothing
 
 -- Evalua un comando con los enviroments dados

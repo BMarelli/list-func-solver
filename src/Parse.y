@@ -35,7 +35,7 @@ import Data.Map.Strict as M hiding (map)
   VAR           { TVar $$ }
   TYPE          { TType $$ }
   DEF           { TDef }
-  CONST         { TConst }
+  LET           { TLet }
 
 %%
 commsSeq    :: { [SComms] }
@@ -44,7 +44,7 @@ commsSeq    : comms                            { [$1] }
 
 comms       :: { SComms }
 comms       : DEF VAR '=' funcSeq ';'          { SDef $2 $4 }
-            | CONST VAR '=' exp ';'            { SConst $2 $4 }
+            | LET VAR '=' exp ';'              { SLet $2 $4 }
             | exp '::' NUM ';'                 { SInfer $1 $3 }
             | exp ';'                          { SEval $1 }
 
@@ -107,7 +107,7 @@ data Token = TEquals
            | TVar String
            | TType Type
            | TDef
-           | TConst
+           | TLet
            deriving Show
 
 parseError :: [Token] -> a
@@ -155,7 +155,7 @@ lexer4var cs = case span (\c -> isAlpha c || c == '_' || isDigit c) cs of
                 ("delete_right", rest) -> TDeleteright : lexer rest
                 ("d_r", rest) -> TDeleteright : lexer rest
                 ("def", rest) -> TDef : lexer rest
-                ("const", rest) -> TConst : lexer rest
+                ("let", rest) -> TLet : lexer rest
                 (var, rest) -> case M.lookup var mapType of
                                     Just t -> TType t : lexer rest
                                     Nothing -> if head rest == '>' then TType (INVALID var) : lexer rest

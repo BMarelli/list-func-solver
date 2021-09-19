@@ -18,4 +18,4 @@ def swap = move_right zero_left move_left zero_left
 def clear = zero_left zero_left zero_right succ_right { move_right move_right delete_left move_left move_left } delete_left delete_left;
 
 -- Lista vacia
-const empty = [] <Seq>;
+let empty = [] <Seq>;

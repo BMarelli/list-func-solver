@@ -30,10 +30,6 @@ ppEnv f v = do putStrLn "Function enviroment:"
                ppFuncs (toList f)
                putStrLn "Variable enviroment:"
                ppVars (toList v)
--- ppEnv f v = let pFunc = ppFuncs (toList f)
---                 pVars = ppVars (toList v)
---             in "Function enviroment:\n" ++ intercalate "\n" pFunc ++ "\n" 
---                 ++ "Variable enviroment:\n" ++ intercalate "\n" pVars
 
 
 ppFuncs :: [(String, [Funcs])] -> IO ()
@@ -61,7 +57,6 @@ func2string (Succ L) = "succ_left"
 func2string (Succ R) = "succ_right"
 func2string (Rep fs) = "{" ++ unwords (map func2string fs) ++ "}"
 func2string (Defined ss) = ss
--- func2string (Power fs n) = "(" ++ unwords (map func2string fs) ++ ")^" ++ show n
 
 ppVars :: [(String, Exp)] -> IO ()
 ppVars [] = putStrLn "empty"
@@ -71,28 +66,28 @@ ppVars (exp:exps) = do ppVars' exp
 
 ppVars' :: (String, Exp) -> IO ()
 ppVars' (ss, List (xs, t)) = do setSGR [SetColor Foreground Vivid Magenta]
-                                putStr "const "
+                                putStr "let "
                                 setSGR [Reset]
                                 putStr $  ss ++ " = " ++ show xs
                                 setSGR [SetColor Foreground Vivid Blue]
                                 putStr (" <" ++ ppType t ++ ">;\n")
                                 setSGR [Reset]
 ppVars' (ss, Var (var, t)) = do setSGR [SetColor Foreground Vivid Magenta]
-                                putStr "const "
+                                putStr "let "
                                 setSGR [Reset]
                                 putStr $ ss ++ " = " ++ var
                                 setSGR [SetColor Foreground Vivid Blue]
                                 putStr (" <" ++ ppType t ++ ">;\n")
                                 setSGR [Reset]
 ppVars' (ss, Term fs (List (xs, t))) = do setSGR [SetColor Foreground Vivid Magenta]
-                                          putStr "const "
+                                          putStr "let "
                                           setSGR [Reset]
                                           putStr $ ss ++ " = " ++ unwords (map func2string fs) ++ " : " ++ show xs
                                           setSGR [SetColor Foreground Vivid Blue]
                                           putStr (" <" ++ ppType t ++ ">;\n")
                                           setSGR [Reset]
 ppVars' (ss, Term fs (Var (var, t))) = do setSGR [SetColor Foreground Vivid Magenta]
-                                          putStr "const "
+                                          putStr "let "
                                           setSGR [Reset]
                                           putStr $ ss ++ " = " ++ unwords (map func2string fs) ++ " : " ++ var
                                           setSGR [SetColor Foreground Vivid Blue]
