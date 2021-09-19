@@ -55,5 +55,30 @@ data Error = UndefinedFunc String -- Funcion no definida
            | InvalidAplication -- Aplicacion invalida de una funcion
            | InvalidInfer Int Int -- Inferencia invalida (Valor real) (Valor propuesto)
            | InferRep -- Inferencia invalida de la funcion repetir
+           | InferPower
            | InvalidType String -- Tipo de estructura no definida
            deriving (Show, Eq)
+
+-- ==================================== Azucar Sintactico ====================================
+-- Comandos
+data SComms = SDef String [SFuncs]
+            | SConst String SExp
+            | SEval SExp
+            | SInfer SExp Int
+            deriving (Show, Eq)
+
+-- Expresion
+data SExp = SList (ListElements, Type)
+          | SVar (String, Type)
+          | STerm [SFuncs] SExp
+          deriving (Show, Eq)
+
+-- Funciones asucaradas
+data SFuncs = SZero Orientation
+            | SSucc Orientation
+            | SDelete Orientation
+            | SRep [SFuncs]
+            | SDefined String
+            | SPower [SFuncs] Int
+            deriving (Show, Eq)
+-- ===========================================================================================
