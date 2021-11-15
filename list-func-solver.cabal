@@ -27,7 +27,6 @@ library
   exposed-modules:
       AST
       Elab
-      List.ArrFList
       List.CListFList
       List.FList
       List.ListFList
