@@ -35,10 +35,10 @@ aplicar' fs l = aplicar_ fs (List.FList.fromList l)
                                   Right l' -> aplicar_ fs l'
       aplicar_ ((Delete or):fs) l = case delete or l of
                                   Left err -> throw err
-                                  Right l' -> aplicar_ fs l
+                                  Right l' -> aplicar_ fs l'
       aplicar_ ((Rep f):fs) l = case rep f l of
                                   Left err -> throw err
-                                  Right l' -> aplicar_ fs l
+                                  Right l' -> aplicar_ fs l'
       aplicar_ ((Defined ss):fs) l = do fns <- look4func ss
                                         aplicar_ (fns ++ fs) l
 

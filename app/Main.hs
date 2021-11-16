@@ -12,7 +12,6 @@ import Parse
 import PPrinter ( pp, ppc, ppEnv )
 import AST
 import Monads
-import List.FList
 import Elab
 
 type File = Maybe FilePath
@@ -89,7 +88,8 @@ fileEvals file f l = do lns <- fileManagement file
                                          putLn $ "Se abrio el archivo "++ file ++ " correctamente!."
                                          liftIO $ setSGR [Reset]
                                          let rest = parser lns
-                                             (_, f', l') = elab rest f l
+                                             (last, f', l') = elab rest f l
+                                         liftIO $ pp last
                                          return (f', l')
 
 -- Cambiar esto (comando propio)

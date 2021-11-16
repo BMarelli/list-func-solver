@@ -1,7 +1,8 @@
 module Elab where
+
 import AST
 import ListEval
-import Control.Monad
+import GHC.Base (join)
 
 desugarComms :: SComms -> Comms
 desugarComms (SDef ss sfs) = Def ss (desugarFuncs sfs)
@@ -15,21 +16,13 @@ desugarExp (SVar (ss, t)) = Var (ss, t)
 desugarExp (STerm sfns sexp) = Term (desugarFuncs sfns) (desugarExp sexp)
 
 desugarFuncs :: [SFuncs] -> [Funcs]
-desugarFuncs fns = join $ map desugarFuncs' fns
-
-desugarFuncs' :: SFuncs -> [Funcs]
-desugarFuncs' (SZero or) = [Zero or]
-desugarFuncs' (SSucc or) = [Succ or]
-desugarFuncs' (SDelete or) = [Delete or]
-desugarFuncs' (SRep sfns) = [Rep (desugarFuncs sfns)]
-desugarFuncs' (SDefined ss) = [Defined ss]
-desugarFuncs' (SPower sfns n) = let fns = desugarFuncs sfns
-                               in copyN fns n
-    where
-      copyN :: [Funcs] -> Int -> [Funcs]
-      copyN _ 0 = []
-      copyN fs n = fs ++ (copyN fs (n-1))
-
+desugarFuncs [] = []
+desugarFuncs ((SZero op) : fns) = Zero op : desugarFuncs fns
+desugarFuncs ((SSucc op) : fns) = Succ op : desugarFuncs fns
+desugarFuncs ((SDelete op) : fns) = Delete op : desugarFuncs fns
+desugarFuncs ((SRep sfns) : fns) = Rep (desugarFuncs sfns) : desugarFuncs fns
+desugarFuncs ((SDefined ss) : fns) = Defined ss : desugarFuncs fns
+desugarFuncs ((SPower sfns n) : fns) = (join . replicate n) (desugarFuncs sfns) ++ desugarFuncs fns
 
 elab :: [SComms] -> EnvFuncs -> EnvVars -> (Either Error (Maybe TypedList), EnvFuncs, EnvVars)
 elab xs f v = eval (map desugarComms xs) f v
