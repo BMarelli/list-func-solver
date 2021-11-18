@@ -9,7 +9,7 @@ import Data.Map.Strict as M hiding (filter, map, drop)
 import System.Console.Haskeline
 import System.Console.ANSI
 import Parse
-import PPrinter ( pp, ppc, ppEnv )
+import PPrinter ( pp, ppf, ppc, ppEnv )
 import AST
 import Monads
 import Elab
@@ -89,7 +89,7 @@ fileEvals file f l = do lns <- fileManagement file
                                          liftIO $ setSGR [Reset]
                                          let rest = parser lns
                                              (last, f', l') = elab rest f l
-                                         liftIO $ pp last
+                                         liftIO $ ppf last
                                          return (f', l')
 
 -- Cambiar esto (comando propio)
@@ -134,5 +134,5 @@ repl f v = do input <- getInputLine"FL> "
 main :: IO ()
 main = do putStrLn "Evaluador de Funciones de Listas."
           putStrLn ":? o :help para conocer los comandos y como utilizar el programa."
-          (f, v) <- runInputT defaultSettings $ fileEvals "Ejemplos/Prelude.fl" emptyEnvFuncs emptyEnvVars
+          (f, v) <- runInputT defaultSettings $ fileEvals "test/Prelude.fl" emptyEnvFuncs emptyEnvVars
           runInputT defaultSettings (repl f v)

@@ -20,6 +20,18 @@ pp (Left err) = do setSGR [SetColor Foreground Vivid Red]
                    putStrLn (ppError err)
                    setSGR [Reset]
 
+ppf :: Either Error (Maybe TypedList) -> IO ()
+ppf (Right (Just (l, t))) = do setSGR [SetColor Foreground Vivid Green]
+                               putStr (show l)
+                               setSGR [SetColor Foreground Vivid Blue]
+                               putStr (" <" ++ ppType t ++ ">\n")
+                               setSGR [Reset]
+
+ppf (Right Nothing) = return ()
+ppf (Left err) = do setSGR [SetColor Foreground Vivid Red]
+                    putStrLn (ppError err)
+                    setSGR [Reset]
+
 ppc :: [Comms] -> IO ()
 ppc cmm = do setSGR [SetColor Foreground Vivid Green]
              putStrLn (foldr ((++) . show) "" cmm)

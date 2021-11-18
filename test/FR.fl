@@ -15,3 +15,5 @@ def suma_h = p1 succ_left;
 def suma =  move_right suma_g zero_left
             { move_right swap move_left suma_h move_right delete_left succ_left swap move_left }
             delete_left swap move_left;
+
+suma : [1,2] <TList>;
