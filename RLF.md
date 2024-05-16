@@ -1,6 +1,6 @@
 # Recursive List Functions
 ## What are list functions?
-First of all, we define a list as ordered and finite collection of elements from $\N_0$. Then we define $\mathcal{L}$ as the set of all lists, and $\mathcal{L}^k$ as the set of all lists of length $k$.
+First of all, we define a list as ordered and finite collection of elements from $ℕ_0$. Then we define $\mathcal{L}$ as the set of all lists, and $\mathcal{L}^k$ as the set of all lists of length $k$.
 
 A list function is a function $f: \mathcal{L} \to \mathcal{L}$ a list as input and returns a list as output.
 
@@ -47,7 +47,7 @@ $$
 $$
 
 ## The power operator
-Given a list function $F : \mathcal{L} \to \mathcal{L}$ and $k \in \N_0$, the power operator $(F)^k$ is defined as the composition of $F$ $k$ times. For example, $(F)^3 = F F F$.
+Given a list function $F : \mathcal{L} \to \mathcal{L}$ and $k \in ℕ_0$, the power operator $(F)^k$ is defined as the composition of $F$ $k$ times. For example, $(F)^3 = F F F$.
 
 So given $F : \mathcal{L} \to \mathcal{L}$ and a list $X$
 $$
