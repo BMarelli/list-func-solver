@@ -37,12 +37,12 @@ $$
 The composition of two list functions $F$ and $G$ is a new list function $H$ such that $H = FG$. Given a list $l$, the composition $H l$ is equivalent to $F (G l)$.
 
 ## Repetition of list functions
-Given a list function $F : \mathcal{L} \to \mathcal{L}$, the repetition of $F$ is defined as $H = \{ F \}$, $H : \mathcal{L}^k \to \mathcal{L}^p$ with $k \geq 2$:
+Given a list function $F : \mathcal{L} \to \mathcal{L}$, the repetition of $F$ is defined as $H = \langle F \rangle$, $H : \mathcal{L}^k \to \mathcal{L}^p$ with $k \geq 2$:
     
 $$
-\{F\} [x, Y, y] = \begin{cases} 
+\langle F \rangle [x, Y, y] = \begin{cases} 
                           [x, Y, z] & x = z \\
-                          \{F\} F [x, Y, z] & x \neq z
+                          \langle F \rangle F [x, Y, z] & x \neq z
                   \end{cases}
 $$
 
