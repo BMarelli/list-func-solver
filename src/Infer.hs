@@ -2,7 +2,6 @@ module Infer (infer) where
 
 import Data.List.NonEmpty (NonEmpty ((:|)), fromList)
 import Lang
-import Lib
 import MonadFL (MonadFL, failFL, lookUpExp, lookUpFunc)
 import Data.Foldable (foldlM)
 

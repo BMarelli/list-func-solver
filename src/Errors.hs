@@ -2,7 +2,6 @@ module Errors (Error (..)) where
 
 import Lib
 import Text.Parsec.Error (ParseError)
-import Lang
 
 data Error
   = ErrorParse ParseError

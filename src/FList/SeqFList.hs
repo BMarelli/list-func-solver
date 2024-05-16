@@ -8,7 +8,7 @@ import Prelude hiding (length)
 import qualified Data.Foldable as S hiding (length)
 
 instance FList S.Seq where
-  length = S.length
+  length l = S.length l
   fromList = S.fromList
   toList = S.toList
 

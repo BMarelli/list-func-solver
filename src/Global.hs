@@ -1,5 +1,3 @@
-{-# LANGUAGE PatternSynonyms #-}
-
 module Global (Env (..), initialEnviroment, defaultType) where
 
 import Lang
