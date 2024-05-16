@@ -8,27 +8,37 @@ A list function is a function $f: \mathcal{L} \to \mathcal{L}$ a list as input a
 Here are some basic list functions with their domains:
 
 - _*Zero Left*_ - $0_l : \mathcal{L}^k \to \mathcal{L}^{k+1}$
+
 $$
     0_l [1,2,3] = [0, 1,2,3]
 $$
+
 - _*Zero Right*_ - $0_r : \mathcal{L}^k \to \mathcal{L}^{k+1}$
+
 $$
     0_r [1,2,3] = [1,2,3,0]
 $$
+
 - _*Delete Left*_ - $\Box_l : \mathcal{L}^k \to \mathcal{L}^{k-1}$ with $k \geq 1$
+
 $$
     \Box_l [1,2,3] = [2,3]
 $$
+
 - _*Delete Right*_ - $\Box_r : \mathcal{L}^k \to \mathcal{L}^{k-1}$ with $k \geq 1$
+
 $$
     \Box_r [1,2,3] = [1,2]
 $$
+
 - _*Successor Left*_ - $S_l : \mathcal{L}^k \to \mathcal{L}^k$ with $k \geq 1$
+
 $$
     S_l [1,2,3] = [2,2,3]
 $$
 
 - _*Successor Right*_ - $S_r : \mathcal{L}^k \to \mathcal{L}^k$ with $k \geq 1$
+
 $$
     S_r [1,2,3] = [1,2,4]
 $$
@@ -50,6 +60,7 @@ $$
 Given a list function $F : \mathcal{L} \to \mathcal{L}$ and $k \in ℕ_0$, the power operator $(F)^k$ is defined as the composition of $F$ $k$ times. For example, $(F)^3 = F F F$.
 
 So given $F : \mathcal{L} \to \mathcal{L}$ and a list $X$
+
 $$
     (F)^k X = F (F (F \ldots (F X)))
 $$
