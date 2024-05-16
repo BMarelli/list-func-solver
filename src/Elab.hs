@@ -1,28 +1,36 @@
-module Elab where
+module Elab (elab, elabExp, transformFuncs, transformPower) where
 
-import AST
-import ListEval
+import Data.List.NonEmpty
 import GHC.Base (join)
+import Lang
+import Prelude hiding (map, filter)
 
-desugarComms :: SComms -> Comms
-desugarComms (SDef ss sfs) = Def ss (desugarFuncs sfs)
-desugarComms (SLet ss sexp) = Let ss (desugarExp sexp)
-desugarComms (SEval sexp) = Eval (desugarExp sexp)
-desugarComms (SInfer sexp n) = Infer (desugarExp sexp) n
+transformPower :: Seq SFuncs -> Seq SFuncs
+transformPower (SPower n fns :| []) | n == 0    = fromList [SVoid]
+                                    | otherwise = fromList $ join (replicate n (toList (transformPower fns)))
+transformPower sfs@(_ :| []) = sfs
+transformPower (SPower n fns :| sfns) | n == 0    = transformPower (fromList sfns)
+                                      | otherwise = fromList $ (join . replicate n . toList) (transformPower fns)
+                                                    <> (toList . transformPower) (fromList sfns)
+transformPower (sf :| sfns) = sf :| (toList . transformPower) (fromList sfns)
 
-desugarExp :: SExp -> Exp
-desugarExp (SList (l, t)) = List (l, t)
-desugarExp (SVar (ss, t)) = Var (ss, t)
-desugarExp (STerm sfns sexp) = Term (desugarFuncs sfns) (desugarExp sexp)
+transformFunc :: SFuncs -> Funcs
+transformFunc (SZero o) = Zero o
+transformFunc (SSucc o) = Succ o
+transformFunc (SDelete o) = Delete o
+transformFunc (SRep sfns) = Rep (transformFuncs sfns)
+transformFunc (SDefined name) = Defined name
+transformFunc SVoid = Void
+transformFunc _ = undefined
 
-desugarFuncs :: [SFuncs] -> [Funcs]
-desugarFuncs [] = []
-desugarFuncs ((SZero op) : fns) = Zero op : desugarFuncs fns
-desugarFuncs ((SSucc op) : fns) = Succ op : desugarFuncs fns
-desugarFuncs ((SDelete op) : fns) = Delete op : desugarFuncs fns
-desugarFuncs ((SRep sfns) : fns) = Rep (desugarFuncs sfns) : desugarFuncs fns
-desugarFuncs ((SDefined ss) : fns) = Defined ss : desugarFuncs fns
-desugarFuncs ((SPower sfns n) : fns) = (join . replicate n) (desugarFuncs sfns) ++ desugarFuncs fns
+transformFuncs :: Seq SFuncs -> Seq Funcs
+transformFuncs = map transformFunc . transformPower
 
-elab :: [SComms] -> EnvFuncs -> EnvVars -> (Either Error (Maybe TypedList), EnvFuncs, EnvVars)
-elab xs f v = eval (map desugarComms xs) f v
+elabExp :: Exp SFuncs -> Exp Funcs
+elabExp (Const xs) = Const xs
+elabExp (V name) = V name
+elabExp (App sfns e ty) = App (transformFuncs sfns) (elabExp e) ty
+
+elab :: SDecl -> DeclExp
+elab (Decl p name body) = Decl p name (elabExp body)
+elab (DeclFunc p name fns) = DeclFunc p name (transformFuncs fns)

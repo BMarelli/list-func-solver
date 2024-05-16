@@ -1,138 +1,192 @@
-module Main where
-import Control.Monad
-import Control.Monad.IO.Class
-import System.IO
-import Data.Maybe
-import Data.List
-import Data.Char
-import Data.Map.Strict as M hiding (filter, map, drop)
-import System.Console.Haskeline
-import System.Console.ANSI
+module Main (main) where
+
+import Control.Exception
+import Control.Monad (void, when)
+import Control.Monad.Catch (MonadMask)
+import Data.Char (isSpace)
+import Data.List (intercalate, intersperse, isPrefixOf, nub)
+import Elab (elab, elabExp)
+import Errors
+import Eval (eval)
+import Infer (infer)
+import Global (Env (..), initialEnviroment)
+import Lang
+import MonadFL
 import Parse
-import PPrinter ( pp, ppf, ppc, ppEnv )
-import AST
-import Monads
-import Elab
+import PPrint (pp, ppDecl, ppInfer)
+import Lib (Pos (..))
+import System.Console.Haskeline
+  ( InputT,
+    defaultSettings,
+    getInputLine,
+    runInputT,
+  )
+import System.IO (hPrint, hPutStrLn, stderr)
 
-type File = Maybe FilePath
+data Command
+  = Compile CompileForm
+  | PPrint String
+  | Infer String
+  | Reload
+  | Browse
+  | Quit
+  | Help
+  | Noop
 
-data Commands = Solve String
-              | Clear String
-              | Print
-              | Reload
-              | LoadFile File
-              | Display
-              | Help
-              | Exit
-              | None
-              deriving Eq
+data CompileForm
+  = CompileInteractive String
+  | CompileFile String
 
-data CommandsUse = Cmm [String] String String Commands
+data CommandUse = Cmd [String] String String (String -> Command)
 
-putLn :: String -> InputT IO ()
-putLn ss = liftIO $ putStrLn ss
+prompt :: String
+prompt = "FL> "
 
-commands :: [CommandsUse]
-commands = [
-  Cmm [":print"] "<exp>" "print AST of expresion" Print,
-  Cmm [":clear"] "<exp>" "clear variable or funtion from enviroment" (Clear ""),
-  Cmm [":reload"] "" "reload enviroment" Reload,
-  Cmm [":load"] "<file>" "load a file" (LoadFile Nothing),
-  Cmm [":display"] "" "display enviroment" Display,
-  Cmm [":help", ":?"] "" "display commands and the documentation" Help,
-  Cmm [":quit"] "" "exit" Exit
+commands :: [CommandUse]
+commands =
+  [ Cmd [":print"] "<exp>" "pretty print the expression" PPrint,
+    Cmd [":infer", ":i"] "<exp>" "infer length of expression" Infer,
+    Cmd [":reload"] "" "reload enviroment" (const Reload),
+    Cmd [":load"] "<file>" "load a file" (Compile . CompileFile),
+    Cmd [":browse"] "" "display enviroment" (const Browse),
+    Cmd [":help", ":?"] "" "display commands and the documentation" (const Help),
+    Cmd [":quit"] "" "exit" (const Quit)
   ]
 
-commandsEvaluation :: String -> InputT IO Commands
-commandsEvaluation cs = if isPrefixOf ":" cs 
-  then do let (cmd:rest) = words cs
-          let mcmd = filter (\(Cmm ss _ _ _) -> any (isPrefixOf cmd) ss) commands
-          case mcmd of
-            [Cmm _ _ _ f] -> case f of
-                              LoadFile _ -> return $ LoadFile (Just (join rest))
-                              Clear _ -> return $ Clear (join rest)
-                              _ -> return f
-            xs -> outputStrLn "Comando ambiguo" >> return None
-  else return (Solve cs)
+interpretCommand :: String -> IO Command
+interpretCommand x =
+  if ":" `isPrefixOf` x
+    then do
+      let (cmd, t') = break isSpace x
+          t = dropWhile isSpace t'
+      --  find matching commands
+      let matching = filter (\(Cmd cs _ _ _) -> any (isPrefixOf cmd) cs) commands
+      case matching of
+        [] -> do
+          putStrLn ("Unknown command `" ++ cmd ++ "'. Use :? for help.")
+          return Noop
+        [Cmd _ _ _ f] ->
+          do return (f t)
+        _ -> do
+          putStrLn
+            ( "Ambiguous command, could be "
+                ++ intercalate ", " ([head cs | Cmd cs _ _ _ <- matching])
+                ++ "."
+            )
+          return Noop
+    else return (Compile (CompileInteractive x))
 
-printCommands :: String
-printCommands = join $ map ((++"\n").f) commands
-    where
-      f :: CommandsUse -> String
-      f (Cmm cs "" inf _) = let text = intercalate ", " cs
-                            in text ++ replicate (30 - length text) ' ' ++ inf
-      f (Cmm cs arg inf _) = let text = intercalate ", " cs ++ " " ++ arg
-                             in text ++ replicate (30 - length text) ' ' ++ inf
+help :: [CommandUse] -> String
+help cs =
+  "Commands list:  Every command can be abbreviated to :c where\n"
+    ++ "c is the first character of the command.\n\n"
+    ++ "<expr>                  eval an expression\n"
+    ++ "let <var> = <expr>      define a variable\n"
+    ++ "def <var> = <seq func>  define a function\n"
+    ++ unlines
+      ( map
+          ( \(Cmd c a d _) ->
+              let ct = intercalate ", " (map (++ if null a then "" else " " ++ a) c)
+               in ct ++ replicate ((24 - length ct) `max` 2) ' ' ++ d
+          )
+          cs
+      )
 
-printHelp :: String
-printHelp = printCommands ++"\nTODO!"
+handleSDecl :: MonadFL m => SDecl -> m DeclExp
+handleSDecl d = do
+  let d' = elab d
+  case d' of
+    Decl _ name body -> addExp name body >> return d'
+    DeclFunc _ name body -> addFunc name body >> return d'
 
-fileManagement :: FilePath -> InputT IO (Maybe String)
-fileManagement file = if isSuffixOf ".fl" file
-                      then liftIO $ catch
-                                (do lns <- readFile file
-                                    return $ Just lns)
-                                (\err -> do let err_ = show (err :: IOException)
-                                            putStrLn $ "Se produjo un error al abrir el archivo " ++ file
-                                            return Nothing)
-                      else do liftIO $ setSGR [SetColor Foreground Vivid Red]
-                              putLn "El archivo tiene que ser .fl"
-                              liftIO $ setSGR [Reset]
-                              return Nothing
+handleExpr :: MonadFL m => Exp SFuncs -> m ()
+handleExpr e = do
+  let e' = elabExp e
+  r <- eval e'
+  printFL (pp (Const r))
 
-fileEvals :: FilePath -> EnvFuncs -> EnvVars -> InputT IO (EnvFuncs, EnvVars)
-fileEvals file f l = do lns <- fileManagement file
-                        case lns of
-                          Nothing -> return (f, l)
-                          Just lns -> do liftIO $ setSGR [SetColor Foreground Vivid Green]
-                                         putLn $ "Se abrio el archivo "++ file ++ " correctamente!."
-                                         liftIO $ setSGR [Reset]
-                                         let rest = parser lns
-                                             (last, f', l') = elab rest f l
-                                         liftIO $ ppf last
-                                         return (f', l')
+parseIO :: MonadFL m => String -> P a -> String -> m a
+parseIO filename p x = case runP p x filename of
+  Left e -> throwError (ErrorParse e)
+  Right r -> return r
 
--- Cambiar esto (comando propio)
-printAST :: EnvFuncs -> EnvVars -> String -> InputT IO ()
-printAST f v cs = do let (_, exp) = break isSpace cs
-                     case exp of
-                       [] -> outputStrLn "Tiene que ser \":p <exp>\""
-                       _ -> do let exp' = parser (drop 3 cs)
-                               case elab exp' f v of
-                                 (Left err, f', v') -> do liftIO $ pp (Left err)
-                                 (Right res, f', v') -> do liftIO $ ppc (map desugarComms exp')
+loadFile :: MonadFL m => FilePath -> m [SDecl]
+loadFile f = do
+  let filename = reverse (dropWhile isSpace (reverse f))
+  x <-
+    liftIO $
+      catch
+        (readFile filename)
+        ( \e -> do
+            let err = show (e :: IOException)
+            hPutStrLn stderr ("No se pudo abrir el archivo " ++ filename ++ ": " ++ err)
+            return ""
+        )
+  setLastFile filename
+  parseIO filename program x
 
-clearFromEnviroment :: String -> EnvFuncs -> EnvVars -> InputT IO (EnvFuncs, EnvVars)
-clearFromEnviroment ss f v = if M.member ss f then return (M.delete ss f, v)
-                             else return (f, M.delete ss v)
+compileFile :: MonadFL m => FilePath -> m ()
+compileFile = loadFile >=> mapM_ handleSDecl
 
-repl :: EnvFuncs -> EnvVars -> InputT IO ()
-repl f v = do input <- getInputLine"FL> "
-              case input of
-                Nothing -> return ()
-                Just "" -> repl f v
-                Just c -> do cmm <- commandsEvaluation c
-                             case cmm of
-                              Exit -> return ()
-                              None -> repl f v
-                              Print -> printAST f v c >> repl f v
-                              Clear cs -> do (f', v') <- clearFromEnviroment cs f v
-                                             repl f' v'
-                              Reload -> repl emptyEnvFuncs emptyEnvVars 
-                              Solve cs -> let exp = parser cs
-                                          in case elab exp f v of
-                                              (Left err, f', v') -> do liftIO (pp (Left err))
-                                                                       repl f' v'
-                                              (Right res, f', v') -> do liftIO (pp (Right res))
-                                                                        repl f' v'
-                              Display -> liftIO (ppEnv f v) >> repl f v
-                              Help -> outputStrLn printHelp >> repl f v
-                              LoadFile (Just file) -> do (f', v') <- fileEvals file f v
-                                                         repl f' v'
-                              _ -> repl f v
+compileExpr :: MonadFL m => String -> m ()
+compileExpr x = do
+  p <- parseIO "<interactive>" declOrExpr x
+  case p of
+    Left d -> void (handleSDecl d)
+    Right e -> void (handleExpr e)
+
+inferExpr :: MonadFL m => String -> m ()
+inferExpr x = do
+  se <- parseIO "<interactive>" expr x
+  let e = elabExp se
+  t <- infer 0 e
+  printFL (ppInfer t)
+
+prittyPrint :: MonadFL m => String -> m ()
+prittyPrint x = do
+  se <- parseIO "<interactive>" expr x
+  case elabExp se of
+    Const r -> printFL (pp (Const r))
+    V n -> maybe (failFL ("Variable " ++ n ++ " not found.")) (printFL . pp) =<< lookUpExp n
+    App fs e t -> printFL (pp (App fs e t))
+
+
+handleCommand :: MonadFL m => Command -> m Bool
+handleCommand cmd = do
+  s <- get
+  case cmd of
+    Quit -> return False
+    Noop -> return True
+    Help -> do
+      printFL (help commands)
+      return True
+    Browse -> do
+      printFL "Environment:"
+      mapM_ (\(n, e) -> printFL (ppDecl (Decl NoPos n e))) (envExp s)
+      mapM_ (\(n, fs) -> printFL (ppDecl (DeclFunc NoPos n fs))) (envFuncs s)
+      return True
+    Reload -> compileFile (lfile s) >> return True
+    PPrint e -> prittyPrint e >> return True
+    Infer e -> inferExpr e >> return True
+    Compile c -> do
+      case c of
+        CompileInteractive e -> compileExpr e
+        CompileFile f -> put (s {lfile = f}) >> compileFile f
+      return True
+
+repl :: (MonadFL m, MonadMask m) => InputT m ()
+repl = do
+  i <- getInputLine prompt
+  case i of
+    Nothing -> return ()
+    Just "" -> repl
+    Just x -> do
+      cmd <- liftIO $ interpretCommand x
+      cont <- lift $ catchErrors $ handleCommand cmd
+      maybe repl (`when` repl) cont
 
 main :: IO ()
-main = do putStrLn "Evaluador de Funciones de Listas."
-          putStrLn ":? o :help para conocer los comandos y como utilizar el programa."
-          (f, v) <- runInputT defaultSettings $ fileEvals "test/Prelude.fl" emptyEnvFuncs emptyEnvVars
-          runInputT defaultSettings (repl f v)
+main = do
+  putStrLn "List Function Evaluator."
+  putStrLn ":? o :help to know the commands and how to use the program."
+  void (runFL (compileFile "test/testcases/Prelude.fl" >> runInputT defaultSettings repl))

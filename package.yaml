@@ -1,14 +1,14 @@
 name:                list-func-solver
 version:             0.1.0.0
 github:              "githubuser/list-func-solver"
-license:             BSD3
+license:             BSD-3-Clause
 author:              "Author name here"
 maintainer:          "example@example.com"
-copyright:           "2021 Author name here"
+copyright:           "2024 Author name here"
 
 extra-source-files:
 - README.md
-- ChangeLog.md
+- CHANGELOG.md
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -21,14 +21,31 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
-- containers
+- mtl
 - haskeline
-- array
-- ansi-terminal
-- vector
+- parsec
+- pretty
+- exceptions
+- prettyprinter
+- prettyprinter-ansi-terminal
+- text
+- containers
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Widentities
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wmissing-export-lists
+- -Wmissing-home-modules
+- -Wpartial-fields
+- -Wredundant-constraints
 
 library:
   source-dirs: src
+  dependencies:
+    - Cabal
 
 executables:
   list-func-solver-exe:
