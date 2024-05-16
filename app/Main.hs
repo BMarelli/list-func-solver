@@ -1,19 +1,19 @@
 module Main (main) where
 
 import Control.Exception
-import Control.Monad (void, when)
+import Control.Monad ()
 import Control.Monad.Catch (MonadMask)
 import Data.Char (isSpace)
-import Data.List (intercalate, intersperse, isPrefixOf, nub)
+import Data.List (intercalate, isPrefixOf)
 import Elab (elab, elabExp)
 import Errors
 import Eval (eval)
 import Infer (infer)
-import Global (Env (..), initialEnviroment)
+import Global (Env (..))
 import Lang
 import MonadFL
 import Parse
-import PPrint (pp, ppDecl, ppInfer)
+import PPrint (pp, ppDecl, ppInfer, sugar, sugarFuncs)
 import Lib (Pos (..))
 import System.Console.Haskeline
   ( InputT,
@@ -21,7 +21,7 @@ import System.Console.Haskeline
     getInputLine,
     runInputT,
   )
-import System.IO (hPrint, hPutStrLn, stderr)
+import System.IO (hPutStrLn, stderr)
 
 data Command
   = Compile CompileForm
@@ -145,9 +145,9 @@ inferExpr x = do
 prittyPrint :: MonadFL m => String -> m ()
 prittyPrint x = do
   se <- parseIO "<interactive>" expr x
-  case elabExp se of
+  case se of
     Const r -> printFL (pp (Const r))
-    V n -> maybe (failFL ("Variable " ++ n ++ " not found.")) (printFL . pp) =<< lookUpExp n
+    V n -> maybe (failFL ("Variable " ++ n ++ " not found.")) (printFL . pp . sugar) =<< lookUpExp n
     App fs e t -> printFL (pp (App fs e t))
 
 
@@ -162,8 +162,8 @@ handleCommand cmd = do
       return True
     Browse -> do
       printFL "Environment:"
-      mapM_ (\(n, e) -> printFL (ppDecl (Decl NoPos n e))) (envExp s)
-      mapM_ (\(n, fs) -> printFL (ppDecl (DeclFunc NoPos n fs))) (envFuncs s)
+      mapM_ (\(n, e) -> printFL (ppDecl (Decl NoPos n (sugar e)))) (envExp s)
+      mapM_ (\(n, fs) -> printFL (ppDecl (DeclFunc NoPos n (sugarFuncs fs)))) (envFuncs s)
       return True
     Reload -> compileFile (lfile s) >> return True
     PPrint e -> prittyPrint e >> return True
