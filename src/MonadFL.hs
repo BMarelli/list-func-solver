@@ -32,13 +32,13 @@ import System.IO
 class (MonadIO m, MonadState Env m, MonadError Errors.Error m) => MonadFL m
 
 addExp :: MonadFL m => String -> Exp Funcs -> m ()
-addExp name e = modify (\env -> env {envExp = (name, e) : envExp env})
+addExp name e = maybe (modify (\env -> env {envExp = (name, e) : envExp env})) (const (failFL $ "Variable " ++ name ++ " already defined")) =<< lookUpExp name
 
 lookUpExp :: MonadFL m => String -> m (Maybe (Exp Funcs))
 lookUpExp name = gets (lookup name . envExp)
 
 addFunc :: MonadFL m => String -> Seq Funcs -> m ()
-addFunc name funcs = modify (\env -> env {envFuncs = (name, funcs) : envFuncs env})
+addFunc name funcs = maybe (modify (\env -> env {envFuncs = (name, funcs) : envFuncs env})) (const (failFL $ "Function " ++ name ++ " already defined")) =<< lookUpFunc name
 
 lookUpFunc :: MonadFL m => String -> m (Maybe (Seq Funcs))
 lookUpFunc name = gets (lookup name . envFuncs)

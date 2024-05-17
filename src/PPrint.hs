@@ -62,13 +62,15 @@ nameColor = id
 name2doc :: String -> Doc AnsiStyle
 name2doc n = nameColor (pretty n)
 
-
 ty2doc :: Type -> Doc AnsiStyle
 ty2doc DEFAULT = typeColor (angles (pretty defaultType))
 ty2doc (T t) = typeColor (angles (pretty t))
 
+list2doc :: [Element] -> Doc AnsiStyle
+list2doc = brackets . hcat . punctuate (pretty ",") . map pretty
+
 funcs2doc :: Seq SFuncs -> Doc AnsiStyle
-funcs2doc fs = hcat (punctuate (pretty " . ") (map func2doc (toList fs)))
+funcs2doc fs = hcat (punctuate (pretty ".") (map func2doc (toList fs)))
 
 func2doc :: SFuncs -> Doc AnsiStyle
 func2doc (SZero L) = opColor (pretty "zero_left")
@@ -83,7 +85,7 @@ func2doc SVoid = opColor (pretty "void")
 func2doc (SPower n fs) = parens (opColor (funcs2doc fs)) <> (pretty "^" <> annotate italicized (pretty n))
 
 exp2doc :: Exp SFuncs -> Doc AnsiStyle
-exp2doc (Const xs) = constColor (pretty xs)
+exp2doc (Const xs) = constColor (list2doc xs)
 exp2doc (V n) = name2doc n
 exp2doc (App fs e t) =
   let fs' = funcs2doc fs
