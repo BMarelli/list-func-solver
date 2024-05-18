@@ -1,6 +1,16 @@
+# left predecessor : l^k -> l^k, k > 0
 def pred_left = (zero_right)^2.succ_right.{ move_left.succ_right.move_right.succ_right }.delete_right.delete_left.move_left
+# persistent left predecessor : l^k -> l^k+1, k > 0
 def pred_left_ = (zero_right)^2.succ_right.{ move_left.succ_right.move_right.succ_right }.delete_right.move_left
+# right predecessor : l^k -> l^k, k > 0
 def pred_right = (zero_left)^2.succ_left.{ move_right.succ_left.move_left.succ_left }.delete_left.delete_right.move_right
+# persistent right predecessor : l^k -> l^k+1, k > 0
 def pred_right_ = (zero_left)^2.succ_left.{ move_right.succ_left.move_left.succ_left }.delete_left.move_right
-def sum = double_left.(move_right)^2.zero_right.{ succ_right.move_left.succ_right.move_right }.delete_right.move_left.swap.move_left
-# def multiply = zero_right.succ_right.{move_right.double_left.sum.move_right.delete_left.move_left.move_left}
+# sum the two leftmost elements : l^k -> l^k-1, k > 1
+def sum_left = move_right.zero_left.{ succ_left.move_right.succ_left.move_left }.delete_left.delete_right
+# persistent sum the two leftmost elements : l^k -> l^k+1, k > 1
+def sum_left_ = double_left.(move_right)^2.zero_right.{ succ_right.move_left.succ_right.move_right }.delete_right.move_left.swap.move_left
+# remains between the two leftmost elements : l^k -> l^k-1, k > 1
+def minus_left = move_right.zero_right.{ succ_right.move_left.pred_right.move_right }.delete_right.delete_left.move_left
+# multiply the two leftmost elements : l^k -> l^k-1, k > 1
+def multiply_left = move_right.double_right.zero_right.{ succ_right.(move_left)^3.sum_left_.move_right.delete_left.(move_right)^2 }.delete_left.delete_right.(move_left)^2.minus_left
