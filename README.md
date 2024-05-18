@@ -21,3 +21,6 @@ The REPL accepts expressions of recursive list functions. The following function
 - `succ_right`: add 1 to the rightmost element of a list.
 
 You can find the definition of these functions in the [documentation](RLF.md).
+
+## Examples
+There are some functions defined in the [testcases folder](test/testcases)
