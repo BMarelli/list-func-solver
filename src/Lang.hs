@@ -54,6 +54,4 @@ data SFuncs
   | SVoid
   deriving (Show, Eq)
 
-type DeclExp = Decl Funcs
-
 type SDecl = Decl SFuncs

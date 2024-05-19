@@ -8,13 +8,13 @@ import Data.List (intercalate, isPrefixOf)
 import Elab (elab, elabExp)
 import Errors
 import Eval (eval)
-import Infer (infer)
 import Global (Env (..))
+import Infer (infer)
 import Lang
-import MonadFL
-import Parse
-import PPrint (pp, ppDecl, ppInfer, sugar, sugarFuncs)
 import Lib (Pos (..))
+import MonadFL
+import PPrint (pp, ppDecl, ppInfer, sugar, sugarFuncs)
+import Parse
 import System.Console.Haskeline
   ( InputT,
     defaultSettings,
@@ -92,7 +92,7 @@ help cs =
           cs
       )
 
-handleSDecl :: MonadFL m => SDecl -> m DeclExp
+handleSDecl :: MonadFL m => SDecl -> m (Decl Funcs)
 handleSDecl d = do
   let d' = elab d
   case d' of
@@ -149,7 +149,6 @@ prittyPrint x = do
     Const r -> printFL (pp (Const r))
     V n -> maybe (failFL ("Variable " ++ n ++ " not found.")) (printFL . pp . sugar) =<< lookUpExp n
     App fs e t -> printFL (pp (App fs e t))
-
 
 handleCommand :: MonadFL m => Command -> m Bool
 handleCommand cmd = do
