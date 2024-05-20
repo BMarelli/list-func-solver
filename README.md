@@ -12,7 +12,10 @@ Also see in spanish the chapter 4 in the [paper](https://dcc.fceia.unr.edu.ar/si
 4. Run `stack run` to start the REPL.
 
 ## Usage
-The REPL accepts expressions of recursive list functions. The following functions are available:
+The REPL accepts expressions of recursive list functions.
+
+### Basic list functions
+The following functions are available:
 - `zero_left`: add zeros to the left of a list.
 - `zero_right`: add zeros to the right of a list.
 - `delete_left`: delete the leftmost element of a list.
@@ -20,7 +23,23 @@ The REPL accepts expressions of recursive list functions. The following function
 - `succ_left`: add 1 to the leftmost element of a list.
 - `succ_right`: add 1 to the rightmost element of a list.
 
+### Composing list functions
+You can compose list functions to create new functions using the `.` operator. For example, `zero_left . succ_right` is a new function that adds zeros to the left of a list and then adds 1 to the rightmost element.
+
+### Repetition of list functions
+You can use the repetitions of a function by enclosing it in `{` `}`. For example, `{ f }` is a new function that apply the function `f` until the first and last element of the list are equals.
+
+### The power operator
+You can use the power operator `(_)^k` to apply a function `k` times. For example,
+`(f)^3` is a new function that apply the function `f` three times.
+
 You can find the definition of these functions in the [documentation](RLF.md).
+
+## FList TAD
+You can find the definition of the FList TAD in the [documentation](TAD.md). To use the different instance of the FList TAD in the REPL, you can pass the instance to the application of the function to the list. For example to use the instance of [Sequence](src/FList/SeqFList.hs) you can use the following expression:
+```
+FL> zero_left.{ succ_left }.delete_right [4,56,32,1] <Seq>
+```
 
 ## Examples
 There are some functions defined in the [testcases folder](test/testcases)

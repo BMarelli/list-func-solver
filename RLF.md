@@ -50,7 +50,7 @@ The composition of two list functions $F$ and $G$ is a new list function $H$ suc
 Given a list function $F : \mathcal{L} \to \mathcal{L}$, the repetition of $F$ is defined as $H = \langle F \rangle$, $H : \mathcal{L}^k \to \mathcal{L}^p$ with $k \geq 2$:
     
 $$
-\langle F \rangle [x, Y, y] = \begin{cases} 
+\langle F \rangle [x, Y, z] = \begin{cases} 
                           [x, Y, z] & x = z \\
                           \langle F \rangle F [x, Y, z] & x \neq z
                   \end{cases}
