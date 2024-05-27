@@ -35,8 +35,8 @@ You can use the power operator `(_)^k` to apply a function `k` times. For exampl
 
 You can find the definition of these functions in the [documentation](RLF.md).
 
-## FList TAD
-You can find the definition of the FList TAD in the [documentation](TAD.md). To use the different instance of the FList TAD in the REPL, you can pass the instance to the application of the function to the list. For example to use the instance of [Sequence](src/FList/SeqFList.hs) you can use the following expression:
+## FList ADT
+You can find the definition of the FList ADT in the [documentation](ADT.md). To use the different instance of the FList ADT in the REPL, you can pass the instance to the application of the function to the list. For example to use the instance of [Sequence](src/FList/SeqFList.hs) you can use the following expression:
 ```
 FL> zero_left.{ succ_left }.delete_right [4,56,32,1] <Seq>
 ```

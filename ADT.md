@@ -1,8 +1,8 @@
-# The FList TAD
-Here we define the specification of the FList TAD.
+# The FList ADT
+Here we define the specification of the FList ADT.
 
 ```
-tad FList (A :: Set) where
+adt FList (A :: Set) where
     import Nat, String, NonEmpty, Funcs, MonadFL
 
     length :: FList A -> Nat
@@ -54,4 +54,4 @@ rep (f :| fs) <x1, ..., xn> = rep (f :| fs) ((f :| fs) <x1, ..., xn>)
                               if x1 != xn, x > 1
 ```
 
-The FList TAD is defined in the [FList.hs](src/FList/FList.hs) file. Also see an example of an implementation of the FList TAD in the [ListFList.hs](src/FList/ListFList.hs) file.
+The FList ADT is defined in the [FList.hs](src/FList/FList.hs) file. Also see an example of an implementation of the FList ADT in the [ListFList.hs](src/FList/ListFList.hs) file.
