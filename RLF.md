@@ -44,7 +44,7 @@ $$
 $$
 
 ## Composing list functions
-The composition of two list functions $F$ and $G$ is a new list function $H$ such that $H = FG$. Given a list $l$, the composition $H l$ is equivalent to $F (G l)$.
+The composition of two list functions $F$ and $G$ is a new list function $H$ such that $H = FG$. Given a list $l$, the composition $H l$ is equivalent to $G (F l)$.
 
 ## Repetition of list functions
 Given a list function $F : \mathcal{L} \to \mathcal{L}$, the repetition of $F$ is defined as $H = \langle F \rangle$, $H : \mathcal{L}^k \to \mathcal{L}^p$ with $k \geq 2$:
