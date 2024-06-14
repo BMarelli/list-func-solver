@@ -37,6 +37,7 @@ sugar (Const xs) = Const xs
 sugar (V name) = V name
 sugar (App fs e t) = App (sugarFuncs fs) (sugar e) t
 sugar (Print e) = Print (sugar e)
+sugar (Let name e t) = Let name (sugar e) (sugar t)
 
 render :: Doc AnsiStyle -> String
 render = unpack . renderStrict . layoutSmart defaultLayoutOptions
@@ -49,7 +50,7 @@ funColor :: Doc AnsiStyle -> Doc AnsiStyle
 funColor = annotate (colorDull Green)
 
 opColor :: Doc AnsiStyle -> Doc AnsiStyle
-opColor = annotate (color Blue)
+opColor = annotate (color Magenta)
 
 typeColor :: Doc AnsiStyle -> Doc AnsiStyle
 typeColor = annotate (color Blue <> italicized)
@@ -97,6 +98,7 @@ exp2doc (App fs e t) =
       t' = ty2doc t
   in fs' <+> e' <+> t'
 exp2doc (Print e) = opColor (pretty "print") <+> exp2doc e
+exp2doc (Let n e t) = opColor (pretty "let") <+> name2doc n <+> pretty "=" <+> exp2doc e <+> opColor (pretty "in") <+> exp2doc t
 
 pp :: Exp SFuncs -> String
 pp = render . exp2doc

@@ -35,7 +35,8 @@ elabExp (Const xs) = Const xs
 elabExp (V name) = V name
 elabExp (App sfns e ty) = App (transformFuncs sfns) (elabExp e) ty
 elabExp (Print e) = Print (elabExp e)
+elabExp (Let name e t) = Let name (elabExp e) (elabExp t)
 
-elab :: SDecl -> (Decl Funcs)
+elab :: SDecl -> Decl Funcs
 elab (Decl p name body) = Decl p name (elabExp body)
 elab (DeclFunc p name fns) = DeclFunc p name (transformFuncs fns)

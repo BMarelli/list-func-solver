@@ -30,6 +30,7 @@ data Exp func
   | V Name
   | App (Seq func) (Exp func) Type
   | Print (Exp func)
+  | Let Name (Exp func) (Exp func)
   deriving (Show, Eq)
 
 -- Types

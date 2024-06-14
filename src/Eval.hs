@@ -56,3 +56,4 @@ eval (App fs e t) = do
       apply fs' e' i
     Nothing -> failFL "Type not found"
 eval (Print e) = eval e >>= (\r -> printFL (chr <$> r) >> return r)
+eval (Let _ _ _) = failFL "Let not implemented"
