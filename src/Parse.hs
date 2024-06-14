@@ -26,6 +26,7 @@ lexer =
           [ "def",
             "let",
             "print",
+            "in",
             "zero_left",
             "z_l",
             "zero_right",
@@ -148,13 +149,19 @@ app = do
   App sfns e <$> typeL
 
 print :: P (Exp SFuncs)
-print = do
-  reserved "print"
-  e <- oneOf [app, atom]
-  return $ Print e
+print = reserved "print" >> Print <$> expr
+
+letin :: P (Exp SFuncs)
+letin = do
+  reserved "let"
+  v <- var
+  reservedOp "="
+  e1 <- expr
+  reserved "in"
+  Let v e1 <$> expr
 
 expr :: P (Exp SFuncs)
-expr = oneOf [app, atom, print]
+expr = oneOf [app, atom, print, letin]
 
 declVar :: P SDecl
 declVar = do

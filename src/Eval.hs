@@ -59,3 +59,4 @@ eval (Print e) = do
   r <- eval e
   printFL (chr <$> r)
   return r
+eval (Let n e t) = failFL "Let not implemented"

@@ -37,6 +37,7 @@ sugar (Const xs) = Const xs
 sugar (V name) = V name
 sugar (App fs e t) = App (sugarFuncs fs) (sugar e) t
 sugar (Print e) = Print (sugar e)
+sugar (Let n e t) = Let n (sugar e) (sugar t)
 
 render :: Doc AnsiStyle -> String
 render = unpack . renderStrict . layoutSmart defaultLayoutOptions
@@ -94,6 +95,7 @@ exp2doc (App fs e t) =
       t' = ty2doc t
   in fs' <+> e' <+> t'
 exp2doc (Print e) = (typeColor (pretty "print") <+> exp2doc e)
+exp2doc (Let n e t) = (typeColor (pretty "let") <+> name2doc n <+> pretty "=") <+> exp2doc e <+> (typeColor (pretty "in") <+> exp2doc t)
 
 pp :: Exp SFuncs -> String
 pp = render . exp2doc
