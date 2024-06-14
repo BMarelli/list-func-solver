@@ -44,7 +44,7 @@ prompt = "FL> "
 
 commands :: [CommandUse]
 commands =
-  [ Cmd [":print"] "<exp>" "pretty print the expression" PPrint,
+  [ Cmd [":pprint"] "<exp>" "pretty print the expression" PPrint,
     Cmd [":infer", ":i"] "<exp>" "infer length of expression" Infer,
     Cmd [":reload"] "" "reload enviroment" (const Reload),
     Cmd [":load"] "<file>" "load a file" (Compile . CompileFile),
