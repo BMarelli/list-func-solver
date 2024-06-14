@@ -36,6 +36,7 @@ sugar :: Exp Funcs -> Exp SFuncs
 sugar (Const xs) = Const xs
 sugar (V name) = V name
 sugar (App fs e t) = App (sugarFuncs fs) (sugar e) t
+sugar (Print e) = Print (sugar e)
 
 render :: Doc AnsiStyle -> String
 render = unpack . renderStrict . layoutSmart defaultLayoutOptions
@@ -44,8 +45,11 @@ render = unpack . renderStrict . layoutSmart defaultLayoutOptions
 constColor :: Doc AnsiStyle -> Doc AnsiStyle
 constColor = id
 
+funColor :: Doc AnsiStyle -> Doc AnsiStyle
+funColor = annotate (colorDull Green)
+
 opColor :: Doc AnsiStyle -> Doc AnsiStyle
-opColor = annotate (colorDull Green)
+opColor = annotate (color Blue)
 
 typeColor :: Doc AnsiStyle -> Doc AnsiStyle
 typeColor = annotate (color Blue <> italicized)
@@ -73,16 +77,16 @@ funcs2doc :: Seq SFuncs -> Doc AnsiStyle
 funcs2doc fs = hcat (punctuate (pretty ".") (map func2doc (toList fs)))
 
 func2doc :: SFuncs -> Doc AnsiStyle
-func2doc (SZero L) = opColor (pretty "zero_left")
-func2doc (SZero R) = opColor (pretty "zero_right")
-func2doc (SSucc L) = opColor (pretty "succ_left")
-func2doc (SSucc R) = opColor (pretty "succ_right")
-func2doc (SDelete L) = opColor (pretty "delete_left")
-func2doc (SDelete R) = opColor (pretty "delete_right")
+func2doc (SZero L) = funColor (pretty "zero_left")
+func2doc (SZero R) = funColor (pretty "zero_right")
+func2doc (SSucc L) = funColor (pretty "succ_left")
+func2doc (SSucc R) = funColor (pretty "succ_right")
+func2doc (SDelete L) = funColor (pretty "delete_left")
+func2doc (SDelete R) = funColor (pretty "delete_right")
 func2doc (SRep fs) = braces (funcs2doc fs)
-func2doc (SDefined n) = opColor (pretty n)
-func2doc SVoid = opColor (pretty "void")
-func2doc (SPower n fs) = parens (opColor (funcs2doc fs)) <> (pretty "^" <> annotate italicized (pretty n))
+func2doc (SDefined n) = funColor (pretty n)
+func2doc SVoid = funColor (pretty "void")
+func2doc (SPower n fs) = parens (funColor (funcs2doc fs)) <> (pretty "^" <> annotate italicized (pretty n))
 
 exp2doc :: Exp SFuncs -> Doc AnsiStyle
 exp2doc (Const xs) = constColor (list2doc xs)
@@ -92,6 +96,7 @@ exp2doc (App fs e t) =
       e' = exp2doc e
       t' = ty2doc t
   in fs' <+> e' <+> t'
+exp2doc (Print e) = opColor (pretty "print") <+> exp2doc e
 
 pp :: Exp SFuncs -> String
 pp = render . exp2doc
