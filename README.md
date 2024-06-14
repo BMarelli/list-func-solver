@@ -35,6 +35,15 @@ You can use the power operator `(_)^k` to apply a function `k` times. For exampl
 
 You can find the definition of these functions in the [documentation](RLF.md).
 
+### Print the result of an expression
+For printing the result of an expression using ascii characters, you can use the `print` operator. This operator will print the result of the expression and return it. For example:
+
+```
+FL> print succ_left [103,101,108,108,111,32,119,111,114,108,100,33]
+hello world!
+[104,101,108,108,111,32,119,111,114,108,100,33]
+```
+
 ## FList ADT
 You can find the definition of the FList ADT in the [documentation](ADT.md). To use the different instance of the FList ADT in the REPL, you can pass the instance to the application of the function to the list using `<` `>`. For example to use the instance of [Sequence](src/FList/SeqFList.hs) you can use the following expression:
 ```
