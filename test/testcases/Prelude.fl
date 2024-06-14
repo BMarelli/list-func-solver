@@ -1,4 +1,6 @@
 let empty = []
+# ascii values of "hello world!"
+let hello_world = [104,101,108,108,111,32,119,111,114,108,100,33]
 def clear = (zero_left)^2.{delete_right}.(delete_left)^2
 def move_left = zero_left . { succ_left } . delete_right
 def move_right = zero_right . { succ_right } . delete_left
