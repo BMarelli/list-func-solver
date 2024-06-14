@@ -149,6 +149,7 @@ prittyPrint x = do
     Const r -> printFL (pp (Const r))
     V n -> maybe (failFL ("Variable " ++ n ++ " not found.")) (printFL . pp . sugar) =<< lookUpExp n
     App fs e t -> printFL (pp (App fs e t))
+    Print e -> printFL (pp (Print e))
 
 handleCommand :: MonadFL m => Command -> m Bool
 handleCommand cmd = do
