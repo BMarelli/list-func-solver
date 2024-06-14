@@ -8,6 +8,7 @@ import Lib
 import Text.Parsec hiding (oneOf, parse, runP)
 import qualified Text.Parsec.Token as Tok
 import Text.ParserCombinators.Parsec.Language
+import Prelude hiding (exp, print)
 
 type P = Parsec String ()
 
@@ -24,6 +25,7 @@ lexer =
         reservedNames =
           [ "def",
             "let",
+            "print",
             "zero_left",
             "z_l",
             "zero_right",
@@ -145,8 +147,14 @@ app = do
   e <- atom
   App sfns e <$> typeL
 
+print :: P (Exp SFuncs)
+print = do
+  reserved "print"
+  e <- oneOf [app, atom]
+  return $ Print e
+
 expr :: P (Exp SFuncs)
-expr = oneOf [app, atom]
+expr = oneOf [app, atom, print]
 
 declVar :: P SDecl
 declVar = do

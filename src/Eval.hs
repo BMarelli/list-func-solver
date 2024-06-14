@@ -12,6 +12,7 @@ import Data.Sequence as S hiding (length, replicate)
 import Lang
 import MonadFL
 import Prelude hiding (map)
+import Data.Char (chr)
 
 apply :: MonadFL m => Lang.Seq Funcs -> [Element] -> Int -> m [Element]
 apply fs l 0 = FList.toList <$> FList.applyFuncs @[] fs l <&> FList.fromList
@@ -52,6 +53,9 @@ eval (App fs e t) = do
     Just i -> do
       fs' <- evalFuncs fs
       e' <- eval e
-      -- printFL (show fs' <> " " <> show e' <> " " <> show i)
       apply fs' e' i
     Nothing -> failFL "Type not found"
+eval (Print e) = do
+  r <- eval e
+  printFL (chr <$> r)
+  return r
