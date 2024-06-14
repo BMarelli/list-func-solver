@@ -179,7 +179,7 @@ program :: P [SDecl]
 program = many decl
 
 declOrExpr :: P (Either SDecl (Exp SFuncs))
-declOrExpr = oneOf [Left <$> decl, Right <$> expr]
+declOrExpr = oneOf [Left <$> decl <* eof, Right <$> expr <* eof]
 
 -- | Run parser
 runP :: P a -> String -> String -> Either ParseError a
