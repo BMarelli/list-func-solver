@@ -29,6 +29,7 @@ data Exp func
   = Const [Element]
   | V Name
   | App (Seq func) (Exp func) Type
+  | Print (Exp func)
   deriving (Show, Eq)
 
 -- Types
