@@ -7,9 +7,9 @@ Also see in spanish the chapter 4 in the [paper](https://dcc.fceia.unr.edu.ar/si
 
 ## Installation
 1. Clone the repository.
-2. `cd` into the repository and run `stack setup`.
-3. Run `stack build`.
-4. Run `stack run` to start the REPL.
+2. `cd` into the repository.
+3. Run `cabal build`.
+4. Run `cabal run` to start the REPL.
 
 ## Usage
 The REPL accepts expressions of recursive list functions.
