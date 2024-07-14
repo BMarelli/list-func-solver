@@ -1,4 +1,4 @@
-module FList.SeqFList where
+module FList.Sequence where
 
 import FList.FList
 import Lang

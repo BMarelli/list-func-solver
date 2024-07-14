@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module FList.ListFList where
+module FList.List where
 
 import FList.FList
 import Lang
