@@ -54,4 +54,4 @@ rep (f :| fs) <x1, ..., xn> = rep (f :| fs) ((f :| fs) <x1, ..., xn>)
                               if x1 != xn, x > 1
 ```
 
-The FList ADT is defined in the [FList.hs](src/FList/FList.hs) file. Also see an example of an implementation of the FList ADT in the [ListFList.hs](src/FList/ListFList.hs) file.
+The FList ADT is defined in the [FList.hs](src/FList/FList.hs) file. Also see an example of an implementation of the FList ADT in the [List.hs](src/FList/List.hs) file.

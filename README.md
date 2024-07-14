@@ -45,7 +45,7 @@ hello world!
 ```
 
 ## FList ADT
-You can find the definition of the FList ADT in the [documentation](ADT.md). To use the different instance of the FList ADT in the REPL, you can pass the instance to the application of the function to the list using `<` `>`. For example to use the instance of [Sequence](src/FList/SeqFList.hs) you can use the following expression:
+You can find the definition of the FList ADT in the [documentation](ADT.md). To use the different instance of the FList ADT in the REPL, you can pass the instance to the application of the function to the list using `<` `>`. For example to use the instance of [Sequence](src/FList/Sequence.hs) you can use the following expression:
 ```
 FL> zero_left.{ succ_left }.delete_right [4,56,32,1] <Seq>
 [1,4,56,32]
