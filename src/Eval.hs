@@ -5,9 +5,9 @@ module Eval (eval) where
 import Data.Functor ((<&>))
 import Data.List.NonEmpty as NonEmpty
 import qualified FList.FList as FList
-import FList.ListFList ()
+import FList.List ()
 import FList.CList (CList(..))
-import FList.SeqFList ()
+import FList.Sequence ()
 import Data.Sequence as S hiding (length, replicate)
 import Lang
 import MonadFL
