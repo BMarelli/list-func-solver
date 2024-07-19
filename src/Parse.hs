@@ -2,7 +2,6 @@ module Parse where
 
 import Data.Functor
 import Data.List.NonEmpty (NonEmpty ((:|)), fromList)
-import Distribution.Compat.CharParsing (sepByNonEmpty)
 import Lang
 import Lib
 import Text.Parsec hiding (oneOf, parse, runP)
