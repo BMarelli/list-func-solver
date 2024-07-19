@@ -3,9 +3,9 @@
 
 module FList.FList where
 
-import Data.List.NonEmpty as NonEmpty
 import Lang
 import MonadFL (MonadFL)
+import Data.Foldable
 
 class FList l where
   length :: Num a => l a -> Int
@@ -27,5 +27,4 @@ class FList l where
 
 
 applyFuncs :: forall l m a. (FList l, MonadFL m, Num a, Eq a) => Seq Funcs -> l a -> m (l a)
-applyFuncs (f :| []) l = apply f l
-applyFuncs (f :| fs) l = apply f l >>= applyFuncs (NonEmpty.fromList fs)
+applyFuncs fs l = foldlM (flip apply) l fs 

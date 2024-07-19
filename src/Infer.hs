@@ -1,6 +1,5 @@
 module Infer (infer) where
 
-import Data.List.NonEmpty (NonEmpty ((:|)), fromList)
 import Lang
 import MonadFL (MonadFL, failFL, lookUpExp, lookUpFunc)
 import Data.Foldable (foldlM)
@@ -8,9 +7,9 @@ import Data.Foldable (foldlM)
 infer :: MonadFL m => Int -> Exp Funcs -> m Int
 infer i (Const l) = return (i + length l)
 infer i (V name) = lookUpExp name >>= maybe (failFL "Variable not found") (infer i)
-infer i (App (f:|[]) e _) = inferFunc i f >>= (`infer` e)
-infer i (App (f:|fs) e ty) = inferFunc i f >>= (\i' -> infer i' (App (fromList fs) e ty))
+infer i (App fs e _) = foldlM inferFunc i fs >>= (`infer` e)
 infer i (Print e) = infer i e
+
 
 inferFunc :: MonadFL m => Int -> Funcs -> m Int
 inferFunc i (Zero _) = return (i + 1)
