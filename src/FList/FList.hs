@@ -27,4 +27,4 @@ class FList l where
 
 
 applyFuncs :: forall l m a. (FList l, MonadFL m, Num a, Eq a) => Seq Funcs -> l a -> m (l a)
-applyFuncs fs l = foldlM (flip apply) l fs 
+applyFuncs = flip $ foldlM (flip apply)
