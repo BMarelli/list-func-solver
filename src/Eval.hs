@@ -2,19 +2,19 @@
 
 module Eval (eval) where
 
+import Data.Char
 import Data.Functor ((<&>))
 import Data.List.NonEmpty as NonEmpty
+import Data.Sequence as S hiding (length, replicate)
+import FList.CList (CList (..))
 import qualified FList.FList as FList
 import FList.List ()
-import FList.CList (CList(..))
 import FList.Sequence ()
-import Data.Sequence as S hiding (length, replicate)
 import Lang
 import MonadFL
 import Prelude hiding (map)
-import Data.Char
 
-apply :: MonadFL m => Lang.Seq Funcs -> [Element] -> Int -> m [Element]
+apply :: (MonadFL m) => Lang.Seq Funcs -> [Element] -> Int -> m [Element]
 apply fs l 0 = FList.toList <$> FList.applyFuncs @[] fs l <&> FList.fromList
 apply fs l 1 = FList.toList <$> FList.applyFuncs @CList fs (FList.fromList l)
 apply fs l 2 = FList.toList <$> FList.applyFuncs @S.Seq fs (FList.fromList l)
@@ -44,7 +44,7 @@ evalFuncs (f :| fns) = do
   fns' <- evalFuncs (NonEmpty.fromList fns)
   return $ f :| NonEmpty.toList fns'
 
-eval :: MonadFL m => Exp Funcs -> m [Element]
+eval :: (MonadFL m) => Exp Funcs -> m [Element]
 eval (Const xs) = return xs
 eval (V name) = lookUpExp name >>= maybe (failFL "Variable not found") eval
 eval (App fs e t) = do
