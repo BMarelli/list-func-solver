@@ -6,17 +6,11 @@ import Lang
 import Prelude hiding (filter, map)
 
 transformPower :: Seq SFuncs -> Seq SFuncs
-transformPower (SPower n fns :| [])
-  | n == 0 = fromList [SVoid]
-  | otherwise = fromList $ join (replicate n (toList (transformPower fns)))
-transformPower sfs@(_ :| []) = sfs
-transformPower (SPower n fns :| sfns)
-  | n == 0 = transformPower (fromList sfns)
-  | otherwise =
-    fromList $
-      (join . replicate n . toList) (transformPower fns)
-        <> (toList . transformPower) (fromList sfns)
-transformPower (sf :| sfns) = sf :| (toList . transformPower) (fromList sfns)
+transformPower = fromList . concatMap go
+ where
+  go :: SFuncs -> [SFuncs]
+  go (SPower n fs) = join . replicate n . toList . transformPower $ fs
+  go sf = pure sf
 
 transformFunc :: SFuncs -> Funcs
 transformFunc (SZero o) = Zero o
