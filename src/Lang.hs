@@ -11,6 +11,7 @@ type Name = String
 
 -- Orientation
 data Orientation = L | R deriving (Show, Eq)
+
 -- Sequence non-empty
 type Seq a = NonEmpty a
 
