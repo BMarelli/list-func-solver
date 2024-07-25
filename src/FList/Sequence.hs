@@ -1,19 +1,21 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 module FList.Sequence where
 
+import qualified Data.Foldable as S hiding (length)
+import Data.Sequence as S
 import FList.FList
 import Lang
 import MonadFL (MonadFL, failFL)
-import Data.Sequence as S
 import Prelude hiding (length)
-import qualified Data.Foldable as S hiding (length)
 
 instance FList S.Seq where
-  length l = S.length l
+  length = S.length
   fromList = S.fromList
   toList = S.toList
 
   zero L l = return (0 <| l)
-  zero R l = return (l |> 0) 
+  zero R l = return (l |> 0)
 
   succesor _ Empty = failFL "Empty list"
   succesor L (n :<| l) = return $ (n + 1) :<| l
@@ -26,9 +28,9 @@ instance FList S.Seq where
   rep fns l
     | FList.FList.length l < 2 = failFL "List too short"
     | otherwise = rep' fns l
-    where
-      rep' :: (MonadFL m, Num a, Eq a) => Lang.Seq Funcs -> S.Seq a -> m (S.Seq a)
-      rep' fns' l'@(h :<| (_ :|> t))
-        | h == t = return l'
-        | otherwise = applyFuncs fns' l' >>= rep fns'
-      rep' _ _ = failFL "List too short"
+   where
+    rep' :: (MonadFL m, Num a, Eq a) => Lang.Seq Funcs -> S.Seq a -> m (S.Seq a)
+    rep' fns' l'@(h :<| (_ :|> t))
+      | h == t = return l'
+      | otherwise = applyFuncs fns' l' >>= rep fns'
+    rep' _ _ = failFL "List too short"

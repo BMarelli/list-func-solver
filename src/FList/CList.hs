@@ -60,29 +60,29 @@ instance FList CList where
   fromList [] = Empty
   fromList [x] = CUnit x
   fromList (x : xs) = consCL x (fromList xs)
-  
+
   toList Empty = []
   toList (CUnit x) = [x]
   toList (Consnoc x xs y) = x : toList xs ++ [y]
-  
+
   zero L l = return $ consCL 0 l
   zero R l = return $ snocCL 0 l
-  
+
   succesor _ Empty = failFL "Empty list"
   succesor _ (CUnit x) = return $ CUnit (x + 1)
   succesor L (Consnoc h xs l) = return $ Consnoc (h + 1) xs l
   succesor R (Consnoc h xs l) = return $ Consnoc h xs (l + 1)
-  
+
   delete _ Empty = failFL "Empty list"
   delete _ (CUnit _) = return Empty
-  delete L l@Consnoc {} = return $ delHeadCL l
-  delete R l@Consnoc {} = return $ delLastCL l
+  delete L l@Consnoc{} = return $ delHeadCL l
+  delete R l@Consnoc{} = return $ delLastCL l
 
   rep fns l
     | FList.FList.length l < 2 = failFL "List too short"
     | otherwise = rep' fns l
-    where
-      rep' :: (MonadFL m, Num a, Eq a) => Seq Funcs -> CList a -> m (CList a)
-      rep' fns' l'
-        | headCL l' == lastCL l' = return l'
-        | otherwise = applyFuncs fns' l' >>= rep fns'
+   where
+    rep' :: (MonadFL m, Num a, Eq a) => Seq Funcs -> CList a -> m (CList a)
+    rep' fns' l'
+      | headCL l' == lastCL l' = return l'
+      | otherwise = applyFuncs fns' l' >>= rep fns'

@@ -15,12 +15,12 @@ import Lib (Pos (..))
 import MonadFL
 import PPrint (pp, ppDecl, ppInfer, sugar, sugarFuncs)
 import Parse
-import System.Console.Haskeline
-  ( InputT,
-    defaultSettings,
-    getInputLine,
-    runInputT,
-  )
+import System.Console.Haskeline (
+  InputT,
+  defaultSettings,
+  getInputLine,
+  runInputT,
+ )
 import System.IO (hPutStrLn, stderr)
 
 data Command
@@ -44,13 +44,13 @@ prompt = "FL> "
 
 commands :: [CommandUse]
 commands =
-  [ Cmd [":print"] "<exp>" "pretty print the expression" PPrint,
-    Cmd [":infer", ":i"] "<exp>" "infer length of expression" Infer,
-    Cmd [":reload"] "" "reload enviroment" (const Reload),
-    Cmd [":load"] "<file>" "load a file" (Compile . CompileFile),
-    Cmd [":browse"] "" "display enviroment" (const Browse),
-    Cmd [":help", ":?"] "" "display commands and the documentation" (const Help),
-    Cmd [":quit"] "" "exit" (const Quit)
+  [ Cmd [":print"] "<exp>" "pretty print the expression" PPrint
+  , Cmd [":infer", ":i"] "<exp>" "infer length of expression" Infer
+  , Cmd [":reload"] "" "reload enviroment" (const Reload)
+  , Cmd [":load"] "<file>" "load a file" (Compile . CompileFile)
+  , Cmd [":browse"] "" "display enviroment" (const Browse)
+  , Cmd [":help", ":?"] "" "display commands and the documentation" (const Help)
+  , Cmd [":quit"] "" "exit" (const Quit)
   ]
 
 interpretCommand :: String -> IO Command
@@ -92,25 +92,25 @@ help cs =
           cs
       )
 
-handleSDecl :: MonadFL m => SDecl -> m (Decl Funcs)
+handleSDecl :: (MonadFL m) => SDecl -> m (Decl Funcs)
 handleSDecl d = do
   let d' = elab d
   case d' of
     Decl _ name body -> addExp name body >> return d'
     DeclFunc _ name body -> addFunc name body >> return d'
 
-handleExpr :: MonadFL m => Exp SFuncs -> m ()
+handleExpr :: (MonadFL m) => Exp SFuncs -> m ()
 handleExpr e = do
   let e' = elabExp e
   r <- eval e'
   printFL (pp (Const r))
 
-parseIO :: MonadFL m => String -> P a -> String -> m a
+parseIO :: (MonadFL m) => String -> P a -> String -> m a
 parseIO filename p x = case runP p x filename of
   Left e -> throwError (ErrorParse e)
   Right r -> return r
 
-loadFile :: MonadFL m => FilePath -> m [SDecl]
+loadFile :: (MonadFL m) => FilePath -> m [SDecl]
 loadFile f = do
   let filename = reverse (dropWhile isSpace (reverse f))
   x <-
@@ -125,24 +125,24 @@ loadFile f = do
   setLastFile filename
   parseIO filename program x
 
-compileFile :: MonadFL m => FilePath -> m ()
+compileFile :: (MonadFL m) => FilePath -> m ()
 compileFile = loadFile >=> mapM_ handleSDecl
 
-compileExpr :: MonadFL m => String -> m ()
+compileExpr :: (MonadFL m) => String -> m ()
 compileExpr x = do
   p <- parseIO "<interactive>" declOrExpr x
   case p of
     Left d -> void (handleSDecl d)
     Right e -> void (handleExpr e)
 
-inferExpr :: MonadFL m => String -> m ()
+inferExpr :: (MonadFL m) => String -> m ()
 inferExpr x = do
   se <- parseIO "<interactive>" expr x
   let e = elabExp se
   t <- infer 0 e
   printFL (ppInfer t)
 
-prittyPrint :: MonadFL m => String -> m ()
+prittyPrint :: (MonadFL m) => String -> m ()
 prittyPrint x = do
   se <- parseIO "<interactive>" expr x
   case se of
@@ -151,7 +151,7 @@ prittyPrint x = do
     App fs e t -> printFL (pp (App fs e t))
     Print e -> printFL (pp (Print e))
 
-handleCommand :: MonadFL m => Command -> m Bool
+handleCommand :: (MonadFL m) => Command -> m Bool
 handleCommand cmd = do
   s <- get
   case cmd of
@@ -171,7 +171,7 @@ handleCommand cmd = do
     Compile c -> do
       case c of
         CompileInteractive e -> compileExpr e
-        CompileFile f -> put (s {lfile = f}) >> compileFile f
+        CompileFile f -> put (s{lfile = f}) >> compileFile f
       return True
 
 repl :: (MonadFL m, MonadMask m) => InputT m ()

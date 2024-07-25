@@ -20,7 +20,7 @@ transformFunc (SDelete o) = Delete o
 transformFunc (SRep sfns) = Rep (transformFuncs sfns)
 transformFunc (SDefined name) = Defined name
 transformFunc SVoid = Void
-transformFunc _ = undefined
+transformFunc _ = error "transformFunc: not implemented"
 
 transformFuncs :: Seq SFuncs -> Seq Funcs
 transformFuncs = map transformFunc . transformPower

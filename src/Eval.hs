@@ -6,7 +6,7 @@ import Data.Char
 import Data.Functor ((<&>))
 import Data.List.NonEmpty as NonEmpty
 import Data.Semigroup (Semigroup (sconcat))
-import Data.Sequence as S hiding (length, replicate)
+import qualified Data.Sequence as S hiding (length, replicate)
 import FList.CList (CList (..))
 import qualified FList.FList as FList
 import FList.List ()
@@ -15,16 +15,16 @@ import Lang
 import MonadFL
 import Prelude hiding (map)
 
-apply :: (MonadFL m) => Lang.Seq Funcs -> [Element] -> Int -> m [Element]
+apply :: (MonadFL m) => Seq Funcs -> [Element] -> Int -> m [Element]
 apply fs l 0 = FList.toList <$> FList.applyFuncs @[] fs l <&> FList.fromList
 apply fs l 1 = FList.toList <$> FList.applyFuncs @CList fs (FList.fromList l)
 apply fs l 2 = FList.toList <$> FList.applyFuncs @S.Seq fs (FList.fromList l)
 apply _ _ _ = failFL "Invalid type"
 
-evalFuncs :: (MonadFL m) => Lang.Seq Funcs -> m (Lang.Seq Funcs)
+evalFuncs :: (MonadFL m) => Seq Funcs -> m (Seq Funcs)
 evalFuncs fns = sconcat <$> mapM go fns
  where
-  go :: (MonadFL m) => Funcs -> m (Lang.Seq Funcs)
+  go :: (MonadFL m) => Funcs -> m (Seq Funcs)
   go (Rep fs) = NonEmpty.singleton . Rep <$> evalFuncs fs
   go (Defined name) = lookUpFunc name >>= maybe (failFL "Function not found") evalFuncs
   go f = return . NonEmpty.singleton $ f
