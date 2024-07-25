@@ -6,11 +6,12 @@ import Lang
 import Prelude hiding (filter, map)
 
 transformPower :: Seq SFuncs -> Seq SFuncs
-transformPower = fromList . concatMap go
+transformPower = (go =<<)
  where
-  go :: SFuncs -> [SFuncs]
-  go (SPower n fs) = join . replicate n . toList . transformPower $ fs
-  go sf = pure sf
+  go :: SFuncs -> Seq SFuncs
+  go (SPower 0 _) = singleton SVoid
+  go (SPower n fs) = join . fromList . replicate n . transformPower $ fs
+  go fs = pure fs
 
 transformFunc :: SFuncs -> Funcs
 transformFunc (SZero o) = Zero o
