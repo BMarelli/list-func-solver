@@ -15,11 +15,7 @@ instance FList [] where
 
   succesor _ [] = failFL "Empty list"
   succesor L (x : xs) = return (x + 1 : xs)
-  succesor R xs = return (succ_ xs)
-    where
-      succ_ [] = undefined
-      succ_ [n] = [n + 1]
-      succ_ (n : ns) = n : succ_ ns
+  succesor R xs = return (init xs ++ [last xs + 1])
 
   delete _ [] = failFL "Empty list"
   delete L (_ : xs) = return xs
