@@ -129,11 +129,7 @@ compileFile :: (MonadFL m) => FilePath -> m ()
 compileFile = loadFile >=> mapM_ handleSDecl
 
 compileExpr :: (MonadFL m) => String -> m ()
-compileExpr x = do
-  p <- parseIO "<interactive>" declOrExpr x
-  case p of
-    Left d -> void (handleSDecl d)
-    Right e -> void (handleExpr e)
+compileExpr = parseIO "<interactive>" declOrExpr >=> either (void . handleSDecl) handleExpr
 
 inferExpr :: (MonadFL m) => String -> m ()
 inferExpr x = do
