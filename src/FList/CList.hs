@@ -80,9 +80,9 @@ instance FList CList where
 
   rep fns l
     | FList.FList.length l < 2 = failFL "List too short"
-    | otherwise = rep' fns l
+    | otherwise = go fns l
    where
-    rep' :: (MonadFL m, Num a, Eq a) => Seq Funcs -> CList a -> m (CList a)
-    rep' fns' l'
+    go :: (MonadFL m, Num a, Eq a) => Seq Funcs -> CList a -> m (CList a)
+    go fns' l'
       | headCL l' == lastCL l' = return l'
       | otherwise = applyFuncs fns' l' >>= rep fns'

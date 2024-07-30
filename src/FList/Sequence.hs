@@ -27,10 +27,10 @@ instance FList S.Seq where
 
   rep fns l
     | FList.FList.length l < 2 = failFL "List too short"
-    | otherwise = rep' fns l
+    | otherwise = go fns l
    where
-    rep' :: (MonadFL m, Num a, Eq a) => Lang.Seq Funcs -> S.Seq a -> m (S.Seq a)
-    rep' fns' l'@(h :<| (_ :|> t))
+    go :: (MonadFL m, Num a, Eq a) => Lang.Seq Funcs -> S.Seq a -> m (S.Seq a)
+    go fns' l'@(h :<| (_ :|> t))
       | h == t = return l'
       | otherwise = applyFuncs fns' l' >>= rep fns'
-    rep' _ _ = failFL "List too short"
+    go _ _ = failFL "List too short"

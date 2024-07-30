@@ -23,9 +23,9 @@ instance FList [] where
 
   rep fns l
     | FList.FList.length l < 2 = failFL "List too short"
-    | otherwise = rep' fns l
+    | otherwise = go fns l
    where
-    rep' :: (MonadFL m, Num a, Eq a) => Seq Funcs -> [a] -> m [a]
-    rep' fns' l'
+    go :: (MonadFL m, Num a, Eq a) => Seq Funcs -> [a] -> m [a]
+    go fns' l'
       | head l' == last l' = return l'
       | otherwise = applyFuncs fns' l' >>= rep fns'
