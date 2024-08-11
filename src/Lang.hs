@@ -45,7 +45,11 @@ data Exp func var
 data Type
   = DEFAULT
   | T String
-  deriving (Show, Eq)
+  deriving (Eq)
+
+instance Show Type where
+  show DEFAULT = "DEFAULT"
+  show (T t) = t
 
 -- Declarations
 data Decl func var

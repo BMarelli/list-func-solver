@@ -27,14 +27,14 @@ evalFuncs fns = sconcat <$> mapM go fns
  where
   go :: (MonadFL m) => Funcs -> m (Seq Funcs)
   go (Rep fs) = NonEmpty.singleton . Rep <$> evalFuncs fs
-  go (Defined name) = lookUpFunc name >>= maybe (failFL "Function not found") evalFuncs
+  go (Defined name) = lookUpFunc name >>= maybe (failFL ("Function not found: " ++ name)) evalFuncs
   go f = return . NonEmpty.singleton $ f
 
 eval :: (MonadFL m) => Exp Funcs Var -> m [Element]
 eval (Const xs) = return xs
 eval (V var) =
   case var of
-    Global name -> lookUpExp name >>= maybe (failFL "Variable not found") eval
+    Global name -> lookUpExp name >>= maybe (failFL ("Variable not found: " ++ name)) eval
     _ -> failFL "error: free variable"
 eval (App fs e t) = do
   ty <- lookUpType t
@@ -43,7 +43,7 @@ eval (App fs e t) = do
       fs' <- evalFuncs fs
       e' <- eval e
       apply fs' e' i
-    Nothing -> failFL "Type not found"
+    Nothing -> failFL ("Type not found: " ++ show t)
 eval (Print e) = eval e >>= (\r -> printFL (chr <$> r) >> return r)
 eval (LetIn _ u v) = do
   u' <- eval u
