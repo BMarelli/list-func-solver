@@ -20,25 +20,26 @@ lexer :: Tok.TokenParser u
 lexer =
   Tok.makeTokenParser $
     emptyDef
-      { commentLine = "#",
-        reservedNames =
-          [ "def",
-            "let",
-            "print",
-            "zero_left",
-            "z_l",
-            "zero_right",
-            "z_r",
-            "succ_left",
-            "s_l",
-            "succ_right",
-            "s_r",
-            "delete_left",
-            "d_l",
-            "delete_right",
-            "d_r"
-          ],
-        reservedOpNames = ["^", "."]
+      { commentLine = "#"
+      , reservedNames =
+          [ "def"
+          , "let"
+          , "in"
+          , "print"
+          , "zero_left"
+          , "z_l"
+          , "zero_right"
+          , "z_r"
+          , "succ_left"
+          , "s_l"
+          , "succ_right"
+          , "s_r"
+          , "delete_left"
+          , "d_l"
+          , "delete_right"
+          , "d_r"
+          ]
+      , reservedOpNames = ["^", "."]
       }
 
 whiteSpace :: P ()
@@ -134,23 +135,34 @@ func = oneOf [zeroLeft, zeroRight, succLeft, succRight, deleteLeft, deleteRight,
 
 funcs :: P (Seq SFuncs)
 funcs = do
-  sfns <- func `sepBy1`  oneOf [reservedOp "."]
+  sfns <- func `sepBy1` oneOf [reservedOp "."]
   return $ fromList sfns
 
-atom :: P (Exp SFuncs)
+atom :: P (Exp SFuncs Name)
 atom = oneOf [Const <$> list, V <$> var]
 
-app :: P (Exp SFuncs)
+app :: P (Exp SFuncs Name)
 app = do
   sfns <- funcs
-  e <- atom
+  e <- expr
   App sfns e <$> typeL
 
-print :: P (Exp SFuncs)
+print :: P (Exp SFuncs Name)
 print = reserved "print" >> Print <$> expr
 
-expr :: P (Exp SFuncs)
-expr = oneOf [app, atom, print]
+letin :: P (Exp SFuncs Name)
+letin = do
+  reserved "let"
+  v <- var
+  reservedOp "="
+  u <- expr
+  reserved "in"
+  LetIn v u <$> expr
+
+expr :: P (Exp SFuncs Name)
+expr = try (parens expr') <|> expr'
+ where
+  expr' = oneOf [app, atom, print, letin]
 
 declVar :: P SDecl
 declVar = do
@@ -169,13 +181,13 @@ declFunc = do
   DeclFunc i v <$> funcs
 
 decl :: P SDecl
-decl = oneOf [declVar, declFunc]
+decl = oneOf [declFunc, declVar]
 
 program :: P [SDecl]
 program = many decl
 
-declOrExpr :: P (Either SDecl (Exp SFuncs))
-declOrExpr = oneOf [Left <$> decl, Right <$> expr]
+declOrExpr :: P (Either SDecl (Exp SFuncs Name))
+declOrExpr = oneOf [Left <$> decl <* eof, Right <$> expr <* eof]
 
 -- | Run parser
 runP :: P a -> String -> String -> Either ParseError a

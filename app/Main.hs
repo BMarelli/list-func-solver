@@ -1,7 +1,7 @@
 module Main (main) where
 
 import Control.Exception
-import Control.Monad ()
+import Control.Monad
 import Control.Monad.Catch (MonadMask)
 import Data.Char (isSpace)
 import Data.List (intercalate, isPrefixOf)
@@ -13,7 +13,7 @@ import Infer (infer)
 import Lang
 import Lib (Pos (..))
 import MonadFL
-import PPrint (pp, ppDecl, ppInfer, sugar, sugarFuncs)
+import PPrint (pp, ppDecl, ppInfer)
 import Parse
 import System.Console.Haskeline (
   InputT,
@@ -92,18 +92,17 @@ help cs =
           cs
       )
 
-handleSDecl :: (MonadFL m) => SDecl -> m (Decl Funcs)
+handleSDecl :: (MonadFL m) => SDecl -> m (Decl Funcs Var)
 handleSDecl d = do
   let d' = elab d
   case d' of
     Decl _ name body -> addExp name body >> return d'
     DeclFunc _ name body -> addFunc name body >> return d'
 
-handleExpr :: (MonadFL m) => Exp SFuncs -> m ()
+handleExpr :: (MonadFL m) => Exp SFuncs Name -> m ()
 handleExpr e = do
-  let e' = elabExp e
-  r <- eval e'
-  printFL (pp (Const r))
+  r <- eval (elabExp e)
+  printFL =<< pp (Const r)
 
 parseIO :: (MonadFL m) => String -> P a -> String -> m a
 parseIO filename p x = case runP p x filename of
@@ -134,18 +133,19 @@ compileExpr = parseIO "<interactive>" declOrExpr >=> either (void . handleSDecl)
 inferExpr :: (MonadFL m) => String -> m ()
 inferExpr x = do
   se <- parseIO "<interactive>" expr x
-  let e = elabExp se
-  t <- infer 0 e
+  t <- infer 0 (elabExp se)
   printFL (ppInfer t)
 
 prittyPrint :: (MonadFL m) => String -> m ()
 prittyPrint x = do
   se <- parseIO "<interactive>" expr x
-  case se of
-    Const r -> printFL (pp (Const r))
-    V n -> maybe (failFL ("Variable " ++ n ++ " not found.")) (printFL . pp . sugar) =<< lookUpExp n
-    App fs e t -> printFL (pp (App fs e t))
-    Print e -> printFL (pp (Print e))
+  case elabExp se of
+    Const r -> printFL =<< pp (Const r)
+    V (Global n) -> lookUpExp n >>= maybe (failFL ("Variable " ++ n ++ " not found.")) (pp >=> printFL)
+    V _ -> failFL "Free variables not allowed."
+    App fs e t -> printFL =<< pp (App fs e t)
+    Print e -> printFL =<< pp (Print e)
+    LetIn n u v -> printFL =<< pp (LetIn n u v)
 
 handleCommand :: (MonadFL m) => Command -> m Bool
 handleCommand cmd = do
@@ -158,8 +158,8 @@ handleCommand cmd = do
       return True
     Browse -> do
       printFL "Environment:"
-      mapM_ (\(n, e) -> printFL (ppDecl (Decl NoPos n (sugar e)))) (envExp s)
-      mapM_ (\(n, fs) -> printFL (ppDecl (DeclFunc NoPos n (sugarFuncs fs)))) (envFuncs s)
+      mapM_ (\(n, e) -> printFL =<< ppDecl (Decl NoPos n e)) (envExp s)
+      mapM_ (\(n, fs) -> printFL =<< ppDecl (DeclFunc NoPos n fs)) (envFuncs s)
       return True
     Reload -> compileFile (lfile s) >> return True
     PPrint e -> prittyPrint e >> return True
