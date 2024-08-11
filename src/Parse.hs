@@ -20,25 +20,25 @@ lexer :: Tok.TokenParser u
 lexer =
   Tok.makeTokenParser $
     emptyDef
-      { commentLine = "#",
-        reservedNames =
-          [ "def",
-            "let",
-            "print",
-            "zero_left",
-            "z_l",
-            "zero_right",
-            "z_r",
-            "succ_left",
-            "s_l",
-            "succ_right",
-            "s_r",
-            "delete_left",
-            "d_l",
-            "delete_right",
-            "d_r"
-          ],
-        reservedOpNames = ["^", "."]
+      { commentLine = "#"
+      , reservedNames =
+          [ "def"
+          , "let"
+          , "print"
+          , "zero_left"
+          , "z_l"
+          , "zero_right"
+          , "z_r"
+          , "succ_left"
+          , "s_l"
+          , "succ_right"
+          , "s_r"
+          , "delete_left"
+          , "d_l"
+          , "delete_right"
+          , "d_r"
+          ]
+      , reservedOpNames = ["^", "."]
       }
 
 whiteSpace :: P ()
@@ -134,22 +134,22 @@ func = oneOf [zeroLeft, zeroRight, succLeft, succRight, deleteLeft, deleteRight,
 
 funcs :: P (Seq SFuncs)
 funcs = do
-  sfns <- func `sepBy1`  oneOf [reservedOp "."]
+  sfns <- func `sepBy1` oneOf [reservedOp "."]
   return $ fromList sfns
 
-atom :: P (Exp SFuncs)
+atom :: P (Exp SFuncs Name)
 atom = oneOf [Const <$> list, V <$> var]
 
-app :: P (Exp SFuncs)
+app :: P (Exp SFuncs Name)
 app = do
   sfns <- funcs
   e <- atom
   App sfns e <$> typeL
 
-print :: P (Exp SFuncs)
+print :: P (Exp SFuncs Name)
 print = reserved "print" >> Print <$> expr
 
-expr :: P (Exp SFuncs)
+expr :: P (Exp SFuncs Name)
 expr = oneOf [app, atom, print]
 
 declVar :: P SDecl
@@ -174,7 +174,7 @@ decl = oneOf [declVar, declFunc]
 program :: P [SDecl]
 program = many decl
 
-declOrExpr :: P (Either SDecl (Exp SFuncs))
+declOrExpr :: P (Either SDecl (Exp SFuncs Name))
 declOrExpr = oneOf [Left <$> decl, Right <$> expr]
 
 -- | Run parser

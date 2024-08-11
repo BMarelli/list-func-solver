@@ -4,7 +4,7 @@ import Data.Foldable (foldlM)
 import Lang
 import MonadFL (MonadFL, failFL, lookUpExp, lookUpFunc)
 
-infer :: (MonadFL m) => Int -> Exp Funcs -> m Int
+infer :: (MonadFL m) => Int -> Exp Funcs Name -> m Int
 infer i (Const l) = return (i + length l)
 infer i (V name) = lookUpExp name >>= maybe (failFL "Variable not found") (infer i)
 infer i (App fs e _) = foldlM inferFunc i fs >>= (`infer` e)

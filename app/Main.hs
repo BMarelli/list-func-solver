@@ -92,14 +92,14 @@ help cs =
           cs
       )
 
-handleSDecl :: (MonadFL m) => SDecl -> m (Decl Funcs)
+handleSDecl :: (MonadFL m) => SDecl -> m (Decl Funcs Name)
 handleSDecl d = do
   let d' = elab d
   case d' of
     Decl _ name body -> addExp name body >> return d'
     DeclFunc _ name body -> addFunc name body >> return d'
 
-handleExpr :: (MonadFL m) => Exp SFuncs -> m ()
+handleExpr :: (MonadFL m) => Exp SFuncs Name -> m ()
 handleExpr e = do
   let e' = elabExp e
   r <- eval e'

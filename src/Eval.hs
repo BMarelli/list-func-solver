@@ -29,7 +29,7 @@ evalFuncs fns = sconcat <$> mapM go fns
   go (Defined name) = lookUpFunc name >>= maybe (failFL "Function not found") evalFuncs
   go f = return . NonEmpty.singleton $ f
 
-eval :: (MonadFL m) => Exp Funcs -> m [Element]
+eval :: (MonadFL m) => Exp Funcs Name -> m [Element]
 eval (Const xs) = return xs
 eval (V name) = lookUpExp name >>= maybe (failFL "Variable not found") eval
 eval (App fs e t) = do

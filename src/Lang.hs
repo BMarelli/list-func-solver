@@ -9,6 +9,13 @@ type Element = Int
 -- Name of variable
 type Name = String
 
+-- Variable
+data Var
+  = Bound !Int
+  | Free Name
+  | Global Name
+  deriving (Show, Eq)
+
 -- Orientation
 data Orientation = L | R deriving (Show, Eq)
 
@@ -26,11 +33,11 @@ data Funcs
   deriving (Show, Eq)
 
 -- Expressions
-data Exp func
+data Exp func var
   = Const [Element]
-  | V Name
-  | App (Seq func) (Exp func) Type
-  | Print (Exp func)
+  | V var
+  | App (Seq func) (Exp func var) Type
+  | Print (Exp func var)
   deriving (Show, Eq)
 
 -- Types
@@ -40,8 +47,8 @@ data Type
   deriving (Show, Eq)
 
 -- Declarations
-data Decl func
-  = Decl {declPos :: Pos, declName :: Name, declBody :: Exp func}
+data Decl func var
+  = Decl {declPos :: Pos, declName :: Name, declBody :: Exp func var}
   | DeclFunc {declPos :: Pos, declName :: Name, funcBody :: Seq func}
   deriving (Show)
 
@@ -56,4 +63,11 @@ data SFuncs
   | SVoid
   deriving (Show, Eq)
 
-type SDecl = Decl SFuncs
+-- Locally Nameless expression
+type LNExp = Exp Funcs Var
+
+-- Locally Nameless declaration
+type LNDecl = Decl Funcs Var
+
+-- Syntactic Sugar and fully named declaration
+type SDecl = Decl SFuncs Name
