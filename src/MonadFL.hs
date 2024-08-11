@@ -52,7 +52,7 @@ lookUpFunc :: (MonadFL m) => String -> m (Maybe (Seq Funcs))
 lookUpFunc name = gets (lookup name . envFuncs)
 
 lookUpType :: (MonadFL m) => Type -> m (Maybe Int)
-lookUpType name = gets (lookup name . envTypes)
+lookUpType ty = gets (lookup ty . envTypes)
 
 printFL :: (MonadFL m) => String -> m ()
 printFL = liftIO . putStrLn
