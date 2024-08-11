@@ -6,7 +6,7 @@ import Lang
 data Env = Env
   { lfile :: String
   -- ^ Last file loaded
-  , envExp :: [(String, Exp Funcs Name)]
+  , envExp :: [(String, Exp Funcs Var)]
   -- ^ Enviroment of expressions
   , envFuncs :: [(String, Seq Funcs)]
   -- ^ Enviroment of functions

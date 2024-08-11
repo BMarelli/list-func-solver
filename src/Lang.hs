@@ -38,6 +38,7 @@ data Exp func var
   | V var
   | App (Seq func) (Exp func var) Type
   | Print (Exp func var)
+  | LetIn Name (Exp func var) (Exp func var)
   deriving (Show, Eq)
 
 -- Types

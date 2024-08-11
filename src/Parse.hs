@@ -24,6 +24,7 @@ lexer =
       , reservedNames =
           [ "def"
           , "let"
+          , "in"
           , "print"
           , "zero_left"
           , "z_l"
@@ -143,14 +144,25 @@ atom = oneOf [Const <$> list, V <$> var]
 app :: P (Exp SFuncs Name)
 app = do
   sfns <- funcs
-  e <- atom
+  e <- expr
   App sfns e <$> typeL
 
 print :: P (Exp SFuncs Name)
 print = reserved "print" >> Print <$> expr
 
+letin :: P (Exp SFuncs Name)
+letin = do
+  reserved "let"
+  v <- var
+  reservedOp "="
+  u <- expr
+  reserved "in"
+  LetIn v u <$> expr
+
 expr :: P (Exp SFuncs Name)
-expr = oneOf [app, atom, print]
+expr = try (parens expr') <|> expr'
+ where
+  expr' = oneOf [app, atom, print, letin]
 
 declVar :: P SDecl
 declVar = do
@@ -169,13 +181,13 @@ declFunc = do
   DeclFunc i v <$> funcs
 
 decl :: P SDecl
-decl = oneOf [declVar, declFunc]
+decl = oneOf [declFunc, declVar]
 
 program :: P [SDecl]
 program = many decl
 
 declOrExpr :: P (Either SDecl (Exp SFuncs Name))
-declOrExpr = oneOf [Left <$> decl, Right <$> expr]
+declOrExpr = oneOf [Left <$> decl <* eof, Right <$> expr <* eof]
 
 -- | Run parser
 runP :: P a -> String -> String -> Either ParseError a

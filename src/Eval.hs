@@ -13,6 +13,7 @@ import FList.List ()
 import FList.Sequence ()
 import Lang
 import MonadFL
+import Subst (subst)
 import Prelude hiding (map)
 
 apply :: (MonadFL m) => Seq Funcs -> [Element] -> Int -> m [Element]
@@ -29,9 +30,12 @@ evalFuncs fns = sconcat <$> mapM go fns
   go (Defined name) = lookUpFunc name >>= maybe (failFL "Function not found") evalFuncs
   go f = return . NonEmpty.singleton $ f
 
-eval :: (MonadFL m) => Exp Funcs Name -> m [Element]
+eval :: (MonadFL m) => Exp Funcs Var -> m [Element]
 eval (Const xs) = return xs
-eval (V name) = lookUpExp name >>= maybe (failFL "Variable not found") eval
+eval (V var) =
+  case var of
+    Global name -> lookUpExp name >>= maybe (failFL "Variable not found") eval
+    _ -> failFL "error: free variable"
 eval (App fs e t) = do
   ty <- lookUpType t
   case ty of
@@ -41,3 +45,6 @@ eval (App fs e t) = do
       apply fs' e' i
     Nothing -> failFL "Type not found"
 eval (Print e) = eval e >>= (\r -> printFL (chr <$> r) >> return r)
+eval (LetIn _ u v) = do
+  u' <- eval u
+  eval (subst (Const u') v)
