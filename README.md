@@ -53,6 +53,18 @@ hello world!
 [104,101,108,108,111,32,119,111,114,108,100,33]
 ```
 
+### Creating local variables in expressions
+
+You can create local variables in expressions using the `let in` syntax. This syntax allows you to store a value in a local variable and use it in the resto of the expression. For example:
+
+```
+FL> let x = succ_left in x [1,2,3,4]
+[2,2,3,4]
+
+FL> swap (let _x = succ_left [1,2,3,4] in zero_right _x)
+[0,2,3,4,2]
+```
+
 ## FList ADT
 
 You can find the definition of the FList ADT in the [documentation](ADT.md). To use the different instance of the FList ADT in the REPL, you can pass the instance to the application of the function to the list using `<` `>`. For example to use the instance of [Sequence](src/FList/Sequence.hs) you can use the following expression:
