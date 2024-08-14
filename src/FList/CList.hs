@@ -2,7 +2,8 @@ module FList.CList where
 
 import FList.FList
 import Lang
-import MonadFL (MonadFL, failFL)
+import MonadFL (MonadFL)
+import PPrint (ppError)
 import Prelude hiding (length)
 
 data CList a = Empty | CUnit a | Consnoc a (CList a) a
@@ -68,18 +69,18 @@ instance FList CList where
   zero L l = return $ consCL 0 l
   zero R l = return $ snocCL 0 l
 
-  succesor _ Empty = failFL "Empty list"
+  succesor _ Empty = ppError "Empty list"
   succesor _ (CUnit x) = return $ CUnit (x + 1)
   succesor L (Consnoc h xs l) = return $ Consnoc (h + 1) xs l
   succesor R (Consnoc h xs l) = return $ Consnoc h xs (l + 1)
 
-  delete _ Empty = failFL "Empty list"
+  delete _ Empty = ppError "Empty list"
   delete _ (CUnit _) = return Empty
   delete L l@Consnoc{} = return $ delHeadCL l
   delete R l@Consnoc{} = return $ delLastCL l
 
   rep fns l
-    | FList.FList.length l < 2 = failFL "List too short"
+    | FList.FList.length l < 2 = ppError "List too short"
     | otherwise = go fns l
    where
     go :: (MonadFL m, Num a, Eq a) => Seq Funcs -> CList a -> m (CList a)

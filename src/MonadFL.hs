@@ -31,14 +31,14 @@ import System.IO
 -- | Define MonadLF
 class (MonadIO m, MonadState Env m, MonadError Errors.Error m) => MonadFL m
 
-addExp :: (MonadFL m) => String -> Exp Funcs Var -> m ()
+addExp :: (MonadFL m) => String -> LNExp -> m ()
 addExp name e =
   maybe
     (modify (\env -> env{envExp = (name, e) : envExp env}))
     (const (failFL $ "Variable " ++ name ++ " already defined"))
     =<< lookUpExp name
 
-lookUpExp :: (MonadFL m) => String -> m (Maybe (Exp Funcs Var))
+lookUpExp :: (MonadFL m) => String -> m (Maybe LNExp)
 lookUpExp name = gets (lookup name . envExp)
 
 addFunc :: (MonadFL m) => String -> Seq Funcs -> m ()
@@ -70,10 +70,9 @@ catchErrors :: (MonadFL m) => m a -> m (Maybe a)
 catchErrors c =
   catchError
     (Just <$> c)
-    ( \e ->
-        liftIO $
-          hPrint stderr e
-            >> return Nothing
+    ( \e -> case e of
+        ErrorPos _ s -> printFL s >> return Nothing
+        _ -> liftIO $ hPrint stderr e >> return Nothing
     )
 
 type FL = StateT Env (ExceptT Errors.Error IO)
