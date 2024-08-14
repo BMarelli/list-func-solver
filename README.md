@@ -9,7 +9,7 @@ Also see in spanish the chapter 4 in the [paper](https://dcc.fceia.unr.edu.ar/si
 
 1. Clone the repository.
 2. `cd` into the repository.
-3. Run the script `setup.sh`.
+3. Run the script that is in the [setup](./setup) folder with the command `./setup/*.setup.sh`.
 
 Once the docker container is running, you can access the REPL by running `cabal run`.
 

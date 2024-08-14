@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 ubuntu:focal
+FROM ubuntu:focal
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/Buenos_Aires
