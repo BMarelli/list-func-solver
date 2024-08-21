@@ -2,8 +2,8 @@
 
 A Haskell embedded DSL that parses and evaluates expressions of recursive list functions (_RLF_).
 
-For more information about _RLF_, see the [documentation](RLF.md).
-Also see in spanish the chapter 4 in the [paper](https://dcc.fceia.unr.edu.ar/sites/default/files/uploads/materias/Libro_3_Mar.pdf).
+For more information about _RLF_, go to the [documentation](docs/RLF.md).
+Also see (_in spanish_) the chapter 4 in the [paper](https://dcc.fceia.unr.edu.ar/sites/default/files/uploads/materias/Libro_3_Mar.pdf).
 
 ## Installation
 
@@ -41,7 +41,7 @@ You can use the repetitions of a function by enclosing it in `{` `}`. For exampl
 You can use the power operator `(_)^k` to apply a function `k` times. For example,
 `(f)^3` is a new function that apply the function `f` three times.
 
-You can find the definition of these functions in the [documentation](RLF.md).
+You can find the definition of these functions in the [documentation](docs/RLF.md).
 
 ### Printing the result
 
@@ -67,7 +67,7 @@ FL> swap (let _x = succ_left [1,2,3,4] in zero_right _x)
 
 ## FList ADT
 
-You can find the definition of the FList ADT in the [documentation](ADT.md). To use the different instance of the FList ADT in the REPL, you can pass the instance to the application of the function to the list using `<` `>`. For example to use the instance of [Sequence](src/FList/Sequence.hs) you can use the following expression:
+You can find the definition of the FList ADT in the [documentation](docs/ADT.md). To use the different instance of the FList ADT in the REPL, you can pass the instance to the application of the function to the list using `<` `>`. For example to use the instance of [Sequence](src/FList/Sequence.hs) you can use the following expression:
 
 ```
 FL> zero_left.{ succ_left }.delete_right [4,56,32,1] <Seq>
