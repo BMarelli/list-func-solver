@@ -1,6 +1,6 @@
 # Recursive List Functions
 
-A Haskell embedded DSL that parses and evaluates expressions of recursive list functions (_RLF_).
+A DSL that parses and evaluates expressions of recursive list functions (_RLF_). The interpreter is implemented in Haskell.
 
 For more information about _RLF_, go to the [documentation](docs/RLF.md).
 Also see (_in spanish_) the chapter 4 in the [paper](https://dcc.fceia.unr.edu.ar/sites/default/files/uploads/materias/Libro_3_Mar.pdf).
