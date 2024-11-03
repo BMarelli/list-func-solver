@@ -11,6 +11,7 @@ instance FList [] where
   length = Prelude.length
   fromList = id
   toList = id
+
   zero L l = return (0 : l)
   zero R l = return (l ++ [0])
 

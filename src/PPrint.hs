@@ -1,4 +1,4 @@
-module PPrint (pp, ppDecl, ppInfer, ppError, ppConsole, sugar, sugarFuncs) where
+module PPrint (pp, ppDecl, ppInfer, ppType, ppError, ppConsole, sugar, sugarFuncs) where
 
 import Data.Char (chr)
 import Data.List.NonEmpty (NonEmpty (..), fromList, toList, (<|))
@@ -141,6 +141,10 @@ ppDecl (DeclFunc p n fs) = return (render . decl2doc $ DeclFunc p n (sugarFuncs 
 
 ppInfer :: Int -> String
 ppInfer = render . inferColor . pretty
+
+ppType :: Type -> String
+ppType DEFAULT = render . typeColor . pretty $ defaultType
+ppType (T t) = render . typeColor . pretty $ t
 
 ppError :: (MonadFL m) => String -> m a
 ppError = failFL . render . annotate (color Red) . pretty
