@@ -13,7 +13,7 @@ import Infer (infer)
 import Lang
 import Lib (Pos (..))
 import MonadFL
-import PPrint (pp, ppDecl, ppInfer)
+import PPrint (pp, ppDecl, ppInfer, ppType)
 import Parse
 import System.Console.Haskeline (
   InputT,
@@ -29,6 +29,7 @@ data Command
   | Infer String
   | Reload
   | Browse
+  | Types
   | Quit
   | Help
   | Noop
@@ -49,6 +50,7 @@ commands =
   , Cmd [":reload"] "" "reload enviroment" (const Reload)
   , Cmd [":load"] "<file>" "load a file" (Compile . CompileFile)
   , Cmd [":browse"] "" "display enviroment" (const Browse)
+  , Cmd [":types"] "" "display types" (const Types)
   , Cmd [":help", ":?"] "" "display commands and the documentation" (const Help)
   , Cmd [":quit"] "" "exit" (const Quit)
   ]
@@ -160,6 +162,10 @@ handleCommand cmd = do
       printFL "Environment:"
       mapM_ (\(n, e) -> printFL =<< ppDecl (Decl NoPos n e)) (envExp s)
       mapM_ (\(n, fs) -> printFL =<< ppDecl (DeclFunc NoPos n fs)) (envFuncs s)
+      return True
+    Types -> do
+      printFL "Types:"
+      mapM_ (printFL . ppType . fst) (filter ((/= DEFAULT) . fst) (envTypes s))
       return True
     Reload -> compileFile (lfile s) >> return True
     PPrint e -> prittyPrint e >> return True
