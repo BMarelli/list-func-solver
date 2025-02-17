@@ -160,7 +160,7 @@ letin = do
   LetIn v u <$> expr
 
 expr :: P (Exp SFuncs Name)
-expr = try (parens expr') <|> expr'
+expr = expr' <|> try (parens expr')
  where
   expr' = oneOf [app, atom, print, letin]
 
