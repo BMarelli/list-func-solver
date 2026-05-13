@@ -57,4 +57,4 @@ COPY . .
 # Build project
 RUN cabal build
 
-CMD ["bash"]
+CMD ["cabal", "run"]
